@@ -1,0 +1,33 @@
+name: 'diff-contract'
+description: 'Deterministic guardrails for AI-generated diffs — block changes outside allowed scope'
+branding:
+  icon: 'shield'
+  color: 'red'
+inputs:
+  contract:
+    description: 'Path to .diffcontract.yml'
+    required: false
+    default: '.diffcontract.yml'
+  base:
+    description: 'Base branch to diff against'
+    required: false
+    default: 'main'
+  github-token:
+    description: 'GitHub token'
+    required: false
+    default: ${{ github.token }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install diff-contract
+      shell: bash
+      run: pip install diff-contract
+    
+    - name: Run diff-contract check
+      shell: bash
+      run: diff-contract check --contract ${{ inputs.contract }} --base ${{ inputs.base }}
