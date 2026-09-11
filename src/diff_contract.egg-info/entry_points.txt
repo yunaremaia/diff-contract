@@ -1,0 +1,2 @@
+[console_scripts]
+diff-contract = diff_contract.cli:main

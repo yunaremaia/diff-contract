@@ -1,0 +1,14 @@
+LICENSE
+README.md
+pyproject.toml
+src/diff_contract/__init__.py
+src/diff_contract/cli.py
+src/diff_contract/contract.py
+src/diff_contract/engine.py
+src/diff_contract.egg-info/PKG-INFO
+src/diff_contract.egg-info/SOURCES.txt
+src/diff_contract.egg-info/dependency_links.txt
+src/diff_contract.egg-info/entry_points.txt
+src/diff_contract.egg-info/requires.txt
+src/diff_contract.egg-info/top_level.txt
+tests/test_contract.py
