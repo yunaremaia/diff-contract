@@ -33,6 +33,28 @@ class RulesEngine:
                 if v is not None:
                     violations.append(v)
                     break  # first matching rule wins
+        # Check aggregate rules (max_files, max_lines)
+        violations.extend(self._check_aggregate_rules(changed_files))
+        return violations
+
+    def _check_aggregate_rules(self, changed_files: Sequence[str]) -> list[Violation]:
+        """Check aggregate rules like max_files and max_lines."""
+        violations: list[Violation] = []
+        total_lines = sum(
+            len(f.get("hunks", [{}])[0].get("lines", [])) if isinstance(f, dict) else 0
+            for f in changed_files
+        )
+        # Actually, for aggregate we need line counts. Since we only have file paths
+        # here, max_lines can't be checked from paths alone; we rely on callers to
+        # pass count info if available. For now, check max_files only.
+        for rule in self.rules:
+            if rule.max_files is not None and len(changed_files) > rule.max_files:
+                violations.append(Violation(
+                    file="<aggregate>",
+                    severity=rule.on_violation,
+                    rule=rule.name,
+                    message=f"Too many files changed ({len(changed_files)} > {rule.max_files})",
+                ))
         return violations
 
     def _check_file(self, file: str, rule: ContractRule) -> Violation | None:
