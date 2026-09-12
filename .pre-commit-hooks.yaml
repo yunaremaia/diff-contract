@@ -1,0 +1,8 @@
+- id: diff-contract
+  name: Check diff against contract rules
+  entry: diff-contract check
+  language: python
+  files: '\.(py|js|ts|go|rs|java|rb|yml|yaml|toml|json|md|txt|sh)$'
+  additional_dependencies:
+    - "diff-contract>=0.1.0"
+  args: ["--contract", ".diffcontract.yml"]

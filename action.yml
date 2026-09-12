@@ -19,15 +19,20 @@ inputs:
 runs:
   using: 'composite'
   steps:
+    - name: Checkout repository
+      uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+
     - name: Set up Python
       uses: actions/setup-python@v6
       with:
         python-version: '3.11'
-    
+
     - name: Install diff-contract
       shell: bash
       run: pip install diff-contract
-    
+
     - name: Run diff-contract check
       shell: bash
       run: diff-contract check --contract ${{ inputs.contract }} --base ${{ inputs.base }}
