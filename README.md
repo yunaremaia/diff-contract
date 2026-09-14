@@ -64,6 +64,30 @@ jobs:
       - uses: yunaremaia/diff-contract@main
 ```
 
+## SARIF Output (GitHub Code Scanning)
+
+Generate SARIF 2.1.0 output for GitHub Code Scanning integration:
+
+```bash
+diff-contract check --sarif > diff-contract.sarif
+diff-contract validate --files src/foo.py --sarif
+```
+
+GitHub Actions workflow:
+
+```yaml
+- uses: yunaremaia/diff-contract@main
+  with:
+    format: sarif
+    sarif-output: diff-contract.sarif
+
+- uses: github/codeql-action/upload-sarif@v3
+  with:
+    sarif_file: diff-contract.sarif
+```
+
+SARIF output includes one rule per violation type. Block violations emit at `error` level, warnings at `warning`.
+
 ## Exit Codes
 
 | Code | Meaning |

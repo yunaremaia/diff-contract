@@ -2,6 +2,12 @@
 
 All notable changes to diff-contract will be documented in this file.
 
+## [Unreleased]
+
+### Added
+- SARIF 2.1.0 output for GitHub Code Scanning integration (`--sarif` flag on `check` and `validate`)
+- `format` and `sarif-output` inputs to `action.yml` with SARIF upload step
+
 ## [0.1.0] - 2026-09-11
 
 ### Added

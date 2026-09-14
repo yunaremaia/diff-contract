@@ -9,7 +9,8 @@ from pathlib import Path
 
 from diff_contract import __version__
 from diff_contract.contract import load_contract
-from diff_contract.engine import DiffCalculator, RulesEngine, ViolationSeverity
+from diff_contract.engine import DiffCalculator, RulesEngine, Violation, ViolationSeverity
+from diff_contract.sarif import violations_to_sarif
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -41,6 +42,11 @@ def main(argv: list[str] | None = None) -> int:
         help="Output format (default: text)",
     )
     check_parser.add_argument(
+        "--sarif",
+        action="store_true",
+        help="Output SARIF 2.1.0 format for GitHub Code Scanning",
+    )
+    check_parser.add_argument(
         "--files",
         nargs="*",
         help="Specific files to check (instead of git diff)",
@@ -69,6 +75,11 @@ def main(argv: list[str] | None = None) -> int:
         choices=["json", "text"],
         default="text",
         help="Output format (default: text)",
+    )
+    validate_parser.add_argument(
+        "--sarif",
+        action="store_true",
+        help="Output SARIF 2.1.0 format for GitHub Code Scanning",
     )
 
     # `init` command
@@ -109,7 +120,10 @@ def _cmd_check(args: argparse.Namespace) -> int:
     violations = engine.check(changed_files)
 
     # Output
-    if args.output == "json":
+    if args.sarif:
+        sarif_doc = violations_to_sarif(violations)
+        print(json.dumps(sarif_doc, indent=2))
+    elif args.output == "json":
         result = {
             "clean": len(violations) == 0,
             "block_count": sum(1 for v in violations if v.severity == ViolationSeverity.BLOCK),
@@ -167,7 +181,10 @@ def _cmd_validate(args: argparse.Namespace) -> int:
     violations = engine.check(changed_files)
 
     # Output
-    if args.output == "json":
+    if args.sarif:
+        sarif_doc = violations_to_sarif(violations)
+        print(json.dumps(sarif_doc, indent=2))
+    elif args.output == "json":
         result = {
             "clean": len(violations) == 0,
             "block_count": sum(1 for v in violations if v.severity == ViolationSeverity.BLOCK),
