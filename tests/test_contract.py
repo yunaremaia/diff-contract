@@ -180,15 +180,6 @@ class TestDiffCalculator:
         # In real tests we'd mock subprocess
         pass
 
-    def test_format_diff_output(self):
-        """Should format diff output correctly."""
-        calc = DiffCalculator(base_branch="main")
-        # Mocked diff output
-        raw = "src/app.py\nsrc/utils.py\n"
-        files = calc._parse_diff_output(raw)
-        assert files == ["src/app.py", "src/utils.py"]
-
-
 class TestViolation:
     def test_violation_str_block(self):
         """Block violation should show severity and file."""

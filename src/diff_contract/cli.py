@@ -72,7 +72,7 @@ def _cmd_check(args: argparse.Namespace) -> int:
 
     # Get changed files
     if args.files:
-        changed_files = list(args.files)
+        changed_files: list = list(args.files)
     else:
         calc = DiffCalculator(base_branch=args.base)
         changed_files = calc.get_changed_files()

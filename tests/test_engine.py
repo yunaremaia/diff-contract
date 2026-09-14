@@ -1,0 +1,152 @@
+"""Tests for diff-contract rules engine."""
+import pytest
+
+from diff_contract.engine import RulesEngine, DiffCalculator, validate_diff
+from diff_contract.contract import Contract, ContractRule, ViolationSeverity
+
+
+class TestRulesEngineMaxLines:
+    """Tests for max_lines aggregate rule — bug fix for issue #2."""
+
+    def test_max_lines_exceeded_warn(self):
+        """When total lines exceed max_lines, emit a violation."""
+        rule = ContractRule(
+            name="max-lines",
+            max_lines=10,
+            on_violation=ViolationSeverity.WARN,
+        )
+        engine = RulesEngine(rules=[rule])
+        # Simulate files with line counts
+        files = [
+            {"path": "a.py", "lines": 6, "added": 4, "deleted": 2},
+            {"path": "b.py", "lines": 8, "added": 8, "deleted": 0},
+        ]
+        violations = engine.check(files)
+        # Total lines = 14 > 10 → violation
+        assert len(violations) >= 1
+        aggregate = [v for v in violations if v.file == "<aggregate>"]
+        assert len(aggregate) == 1
+        assert "14" in aggregate[0].message
+        assert "10" in aggregate[0].message
+
+    def test_max_lines_not_exceeded(self):
+        """When total lines are within max_lines, no aggregate violation."""
+        rule = ContractRule(
+            name="max-lines",
+            max_lines=100,
+            on_violation=ViolationSeverity.WARN,
+        )
+        engine = RulesEngine(rules=[rule])
+        files = [
+            {"path": "a.py", "lines": 5, "added": 5, "deleted": 0},
+        ]
+        violations = engine.check(files)
+        assert not any(v.file == "<aggregate>" for v in violations)
+
+    def test_max_lines_block_severity(self):
+        """max_lines violation uses configured severity."""
+        rule = ContractRule(
+            name="strict-lines",
+            max_lines=5,
+            on_violation=ViolationSeverity.BLOCK,
+        )
+        engine = RulesEngine(rules=[rule])
+        files = [
+            {"path": "x.py", "lines": 10, "added": 10, "deleted": 0},
+        ]
+        violations = engine.check(files)
+        aggregate = [v for v in violations if v.file == "<aggregate>"]
+        assert len(aggregate) == 1
+        assert aggregate[0].severity == ViolationSeverity.BLOCK
+
+    def test_max_lines_with_string_entries(self):
+        """String entries (no line count) should still count as 0 lines."""
+        rule = ContractRule(
+            name="max-lines",
+            max_lines=5,
+            on_violation=ViolationSeverity.WARN,
+        )
+        engine = RulesEngine(rules=[rule])
+        files = ["a.py", "b.py"]
+        violations = engine.check(files)
+        # 0 lines total < 5 → no violation
+        assert not any(v.file == "<aggregate>" for v in violations)
+
+    def test_max_files_still_works(self):
+        """max_files aggregate rule still functions after fix."""
+        rule = ContractRule(
+            name="max-files",
+            max_files=2,
+            on_violation=ViolationSeverity.BLOCK,
+        )
+        engine = RulesEngine(rules=[rule])
+        files = ["a.py", "b.py", "c.py"]
+        violations = engine.check(files)
+        assert len(violations) == 1
+        assert "3" in violations[0].message
+        assert "2" in violations[0].message
+
+
+class TestDiffCalculator:
+    """Tests for DiffCalculator."""
+
+    def test_parse_numstat(self):
+        """_parse_numstat parses numstat format correctly."""
+        calc = DiffCalculator()
+        raw = "5\t2\tsrc/main.py\n10\t0\ttests/test.py\n"
+        result = calc._parse_numstat(raw)
+        assert len(result) == 2
+        assert result[0] == {"path": "src/main.py", "added": 5, "deleted": 2, "lines": 7}
+        assert result[1] == {"path": "tests/test.py", "added": 10, "deleted": 0, "lines": 10}
+
+    def test_parse_numstat_binary(self):
+        """Binary files show '-' for added/deleted."""
+        calc = DiffCalculator()
+        raw = "-\t-\timage.png\n"
+        result = calc._parse_numstat(raw)
+        assert result[0] == {"path": "image.png", "added": 0, "deleted": 0, "lines": 0}
+
+    def test_parse_numstat_empty(self):
+        """Empty input returns empty list."""
+        calc = DiffCalculator()
+        assert calc._parse_numstat("") == []
+        assert calc._parse_numstat("   \n") == []
+
+
+class TestValidateDiff:
+    """Tests for validate_diff convenience function."""
+
+    def test_validate_with_dicts(self):
+        """validate_diff works with change dicts (from DiffCalculator)."""
+        contract = Contract(
+            version=1,
+            rules=(
+                ContractRule(
+                    name="max-lines",
+                    max_lines=5,
+                    on_violation=ViolationSeverity.WARN,
+                ),
+            ),
+        )
+        files = [
+            {"path": "a.py", "lines": 10, "added": 10, "deleted": 0},
+        ]
+        violations = validate_diff(contract, files)
+        assert len(violations) == 1
+        assert "10" in violations[0].message
+
+    def test_validate_with_strings(self):
+        """validate_diff still works with plain strings (legacy)."""
+        contract = Contract(
+            version=1,
+            rules=(
+                ContractRule(
+                    name="max-files",
+                    max_files=1,
+                    on_violation=ViolationSeverity.BLOCK,
+                ),
+            ),
+        )
+        files = ["a.py", "b.py"]
+        violations = validate_diff(contract, files)
+        assert len(violations) == 1

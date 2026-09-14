@@ -5,7 +5,7 @@ from __future__ import annotations
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Sequence
+from typing import Sequence, Union
 
 from diff_contract.contract import Contract, ContractRule, ViolationSeverity
 
@@ -18,18 +18,37 @@ class Violation:
     message: str
 
 
+# A file entry can be a raw path (from --files CLI arg) or a change dict
+FileEntry = Union[str, dict]
+
+
+def _extract_path(entry: FileEntry) -> str:
+    """Extract file path from a FileEntry (str or dict)."""
+    if isinstance(entry, dict):
+        return entry.get("path", "")
+    return entry
+
+
+def _extract_lines(entry: FileEntry) -> int:
+    """Extract changed line count from a FileEntry."""
+    if isinstance(entry, dict):
+        return entry.get("lines", 0)
+    return 0
+
+
 class RulesEngine:
     """Validate a list of changed files against contract rules."""
 
     def __init__(self, rules: Sequence[ContractRule]) -> None:
         self.rules = list(rules)
 
-    def check(self, changed_files: Sequence[str]) -> list[Violation]:
+    def check(self, changed_files: Sequence[FileEntry]) -> list[Violation]:
         """Check changed files against all rules."""
         violations: list[Violation] = []
         for file in changed_files:
+            path = _extract_path(file)
             for rule in self.rules:
-                v = self._check_file(file, rule)
+                v = self._check_file(path, rule)
                 if v is not None:
                     violations.append(v)
                     break  # first matching rule wins
@@ -37,24 +56,32 @@ class RulesEngine:
         violations.extend(self._check_aggregate_rules(changed_files))
         return violations
 
-    def _check_aggregate_rules(self, changed_files: Sequence[str]) -> list[Violation]:
+    def _check_aggregate_rules(
+        self, changed_files: Sequence[FileEntry]
+    ) -> list[Violation]:
         """Check aggregate rules like max_files and max_lines."""
         violations: list[Violation] = []
-        total_lines = sum(
-            len(f.get("hunks", [{}])[0].get("lines", [])) if isinstance(f, dict) else 0
-            for f in changed_files
-        )
-        # Actually, for aggregate we need line counts. Since we only have file paths
-        # here, max_lines can't be checked from paths alone; we rely on callers to
-        # pass count info if available. For now, check max_files only.
+        total_files = len(changed_files)
+        total_lines = sum(_extract_lines(f) for f in changed_files)
         for rule in self.rules:
-            if rule.max_files is not None and len(changed_files) > rule.max_files:
-                violations.append(Violation(
-                    file="<aggregate>",
-                    severity=rule.on_violation,
-                    rule=rule.name,
-                    message=f"Too many files changed ({len(changed_files)} > {rule.max_files})",
-                ))
+            if rule.max_files is not None and total_files > rule.max_files:
+                violations.append(
+                    Violation(
+                        file="<aggregate>",
+                        severity=rule.on_violation,
+                        rule=rule.name,
+                        message=f"Too many files changed ({total_files} > {rule.max_files})",
+                    )
+                )
+            if rule.max_lines is not None and total_lines > rule.max_lines:
+                violations.append(
+                    Violation(
+                        file="<aggregate>",
+                        severity=rule.on_violation,
+                        rule=rule.name,
+                        message=f"Too many lines changed ({total_lines} > {rule.max_lines})",
+                    )
+                )
         return violations
 
     def _check_file(self, file: str, rule: ContractRule) -> Violation | None:
@@ -87,31 +114,51 @@ class DiffCalculator:
         self.base_branch = base_branch
         self.cwd = cwd
 
-    def get_changed_files(self) -> list[str]:
-        """Run git diff and return list of changed files."""
+    def get_changed_files(self) -> list[dict]:
+        """Run git diff and return list of file change dicts with line counts."""
         try:
             result = subprocess.run(
-                ["git", "diff", "--name-only", f"{self.base_branch}...HEAD"],
+                ["git", "--no-pager", "diff", "--numstat", f"{self.base_branch}...HEAD"],
                 capture_output=True,
                 text=True,
                 check=True,
                 cwd=self.cwd,
             )
         except subprocess.CalledProcessError:
-            # Fallback: if we're on the base branch or no diff, return empty
             return []
-        return self._parse_diff_output(result.stdout)
+        return self._parse_numstat(result.stdout)
 
-    def _parse_diff_output(self, raw: str) -> list[str]:
-        """Parse git diff --name-only output."""
+    def _parse_numstat(self, raw: str) -> list[dict]:
+        """Parse git diff --numstat output into list of change dicts."""
         if not raw.strip():
             return []
-        return [line.strip() for line in raw.splitlines() if line.strip()]
+        changes = []
+        for line in raw.splitlines():
+            parts = line.split("\t")
+            if len(parts) >= 3:
+                try:
+                    added = int(parts[0])
+                except ValueError:
+                    added = 0  # binary files show "-"
+                try:
+                    deleted = int(parts[1])
+                except ValueError:
+                    deleted = 0
+                path = parts[2]
+                changes.append(
+                    {
+                        "path": path,
+                        "added": added,
+                        "deleted": deleted,
+                        "lines": added + deleted,
+                    }
+                )
+        return changes
 
 
 def validate_diff(
     contract: Contract,
-    changed_files: Sequence[str],
+    changed_files: Sequence[FileEntry],
 ) -> list[Violation]:
     """Convenience: validate changed files against a contract."""
     engine = RulesEngine(contract.rules)
