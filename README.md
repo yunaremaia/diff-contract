@@ -64,6 +64,36 @@ jobs:
       - uses: yunaremaia/diff-contract@main
 ```
 
+## Validate files (no git required)
+
+Validate specific files against your contract without a git diff — ideal for pre-commit hooks:
+
+```bash
+diff-contract validate --files src/app.py tests/test_app.py
+echo "src/foo.py" | diff-contract validate --from-stdin
+```
+
+## Initialize a contract
+
+Create a starter `.diffcontract.yml`:
+
+```bash
+diff-contract init    # creates .diffcontract.yml in current directory
+```
+
+## Pre-commit hook
+
+diff-contract ships a pre-commit hook. Add to your `.pre-commit-config.yaml`:
+
+```yaml
+repos:
+  - repo: https://github.com/yunaremaia/diff-contract
+    rev: v0.1.0
+    hooks:
+      - id: diff-contract
+        args: ["--contract", ".diffcontract.yml"]
+```
+
 ## SARIF Output (GitHub Code Scanning)
 
 Generate SARIF 2.1.0 output for GitHub Code Scanning integration:
