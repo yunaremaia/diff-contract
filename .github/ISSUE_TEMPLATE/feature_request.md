@@ -1,19 +1,30 @@
 ---
 name: Feature request
-about: Suggest an idea for this project
-title: '[FEATURE] '
-labels: 'enhancement'
-assignees: ''
+about: Suggest a new feature or rule enhancement for diff-contract
+title: "[FEAT] "
+labels: ["enhancement"]
+assignees: []
 ---
 
-## Is your feature request related to a problem?
-A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+## Problem
 
-## Describe the solution you'd like
-A clear and concise description of what you want to happen.
+A clear and concise description of the problem or limitation you are facing.
+Ex: I'm always frustrated when [...]
 
-## Describe alternatives you've considered
-A clear and concise description of any alternative solutions or features you've considered.
+## Proposed Solution
 
-## Additional context
-Add any other context or screenshots about the feature request here.
+A clear description of what rule, CLI flag, or functionality you want added to `diff-contract`.
+
+## Alternatives Considered
+
+A clear description of any alternative solutions, tools, or workarounds you've considered.
+
+## Example Contract or CLI Usage
+
+```yaml
+# Example contract rule syntax or CLI command
+```
+
+## Additional Context
+
+Add any other context, screenshots, or examples about the feature request here.
