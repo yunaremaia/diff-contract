@@ -11,4 +11,5 @@ src/diff_contract.egg-info/dependency_links.txt
 src/diff_contract.egg-info/entry_points.txt
 src/diff_contract.egg-info/requires.txt
 src/diff_contract.egg-info/top_level.txt
+tests/test_cli.py
 tests/test_contract.py
