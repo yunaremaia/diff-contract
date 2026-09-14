@@ -1,0 +1,47 @@
+# Example: Strict contract for a security-sensitive project
+version: 1
+
+rules:
+  # Deny all changes to auth/security code
+  - name: "Block security changes"
+    deny:
+      - "src/auth/**"
+      - "src/security/**"
+      - "src/crypto/**"
+    on_violation: block
+
+  # Deny infrastructure changes
+  - name: "Block infrastructure changes"
+    deny:
+      - "terraform/**"
+      - "kubernetes/**"
+      - "helm/**"
+      - "Dockerfile*"
+      - "docker-compose*.yml"
+    on_violation: block
+
+  # Allow documentation updates with limits
+  - name: "Documentation updates"
+    allow:
+      - "docs/**"
+      - "*.md"
+      - "README*"
+      - "CHANGELOG*"
+    max_files: 10
+    max_lines: 300
+    on_violation: block
+
+  # Allow bugfix-style changes with limits
+  - name: "Bugfix-style changes"
+    allow:
+      - "src/**"
+      - "tests/**"
+    max_files: 5
+    max_lines: 200
+    on_violation: block
+
+  # Warn on any large diff
+  - name: "Large diff warning"
+    max_files: 10
+    max_lines: 500
+    on_violation: warn

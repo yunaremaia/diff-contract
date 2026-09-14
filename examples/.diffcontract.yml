@@ -1,0 +1,28 @@
+# Example: Basic contract for a Python project
+version: 1
+
+rules:
+  # Block changes to critical infrastructure
+  - name: "Protect CI/CD configs"
+    deny:
+      - ".github/workflows/*.yml"
+      - "Dockerfile"
+      - "docker-compose.yml"
+    on_violation: block
+
+  # Allow feature work with limits
+  - name: "Feature development"
+    allow:
+      - "src/features/**"
+      - "tests/features/**"
+    max_files: 15
+    max_lines: 400
+    on_violation: block
+
+  # Warn on large refactors
+  - name: "Large refactor warning"
+    allow:
+      - "src/**"
+    max_files: 30
+    max_lines: 800
+    on_violation: warn
