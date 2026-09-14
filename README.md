@@ -129,14 +129,71 @@ SARIF output includes one rule per violation type. Block violations emit at `err
 | Code | Meaning |
 |------|---------|
 | 0 | Clean — no violations |
-| 1 | Block violation — file denied or outside allowed scope |
-| 2 | Warning — non-blocking violation (e.g., large diff) |
+| 1 | Block violation — file denied, outside allowed scope, or an aggregate limit exceeded with `on_violation: block` |
+| 2 | Warning — non-blocking violation (e.g., large diff with `on_violation: warn`) |
 
 ## Rules
 
 - **allow**: File globs that are permitted (all others blocked)
 - **deny**: File globs that are denied (takes priority)
 - **on_violation**: `block` (exit 1) or `warn` (exit 2)
+- **max_files** / **max_lines**: optional aggregate size limits (see below)
+
+## Aggregate Limits
+
+Path allow/deny rules constrain *which* files may change. `max_files` and `max_lines` constrain *how large* a change set may be. They are evaluated against the whole diff after per-file rules run.
+
+| Field | Meaning |
+|-------|---------|
+| `max_files` | Maximum number of changed files in the diff |
+| `max_lines` | Maximum total changed lines (`added + deleted` from `git diff --numstat`) |
+
+A rule may set either field, both, or neither. Limits are omitted by default (no size budget). When a limit is exceeded, the engine records an aggregate violation on the synthetic path `<aggregate>` and applies that rule's `on_violation`:
+
+- `on_violation: block` — fail the check (exit code **1**). Use this to stop AI agents or CI from landing oversized diffs.
+- `on_violation: warn` — report the overshoot but continue (exit code **2** if there are no block violations). Use this as a PR-size nudge.
+
+Typical uses:
+
+- Cap feature work so an agent cannot rewrite half the tree while implementing one ticket.
+- Keep documentation or bugfix rules tight even when the path globs are broad.
+- Warn on large diffs without blocking hotfixes.
+
+Limits are compared against the **entire** change list, not only files that match that rule's `allow`/`deny` globs. A rule that only sets `max_files` / `max_lines` (no path patterns) is a global size guard.
+
+### Example
+
+```yaml
+# .diffcontract.yml
+version: 1
+rules:
+  - name: "Block core changes"
+    deny:
+      - "src/core/**"
+      - "*.env"
+    on_violation: block
+
+  - name: "Feature development"
+    allow:
+      - "src/features/**"
+      - "tests/features/**"
+    max_files: 15
+    max_lines: 400
+    on_violation: block
+
+  - name: "Large diff warning"
+    max_files: 20
+    max_lines: 600
+    on_violation: warn
+```
+
+In this contract:
+
+- Changes under `src/core/**` or `*.env` are blocked.
+- Feature-area diffs may proceed only if they stay within 15 files and 400 lines; exceeding either budget is a **block** (exit 1).
+- Any diff larger than 20 files or 600 lines also produces a **warning** (exit 2 when nothing is blocked).
+
+See [`examples/strict.yml`](examples/strict.yml) for a fuller contract that combines deny rules with per-rule size budgets.
 
 ## License
 
