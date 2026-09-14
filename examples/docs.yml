@@ -1,0 +1,46 @@
+# Documentation-only project contract
+
+version: 1
+
+rules:
+  # Block changes to non-documentation files
+  - name: "Block source code changes"
+    deny:
+      - "src/**"
+      - "lib/**"
+      - "app/**"
+      - "packages/**"
+      - "*.py"
+      - "*.js"
+      - "*.ts"
+      - "*.rs"
+      - "*.go"
+    on_violation: block
+
+  # Allow documentation changes
+  - name: "Documentation updates"
+    allow:
+      - "docs/**"
+      - "*.md"
+      - "*.rst"
+      - "CHANGELOG*"
+      - "LICENSE*"
+      - "README*"
+    max_files: 30
+    max_lines: 1000
+    on_violation: block
+
+  # Warn on changes outside allowed paths
+  - name: "Scope guard"
+    allow:
+      - "docs/**"
+      - "*.md"
+      - "*.rst"
+      - "CHANGELOG*"
+      - "LICENSE*"
+      - "README*"
+      - "*.txt"
+      - "*.png"
+      - "*.jpg"
+      - "*.svg"
+    on_violation: warn

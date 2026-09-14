@@ -1,0 +1,60 @@
+# Django project contract
+
+version: 1
+
+rules:
+  # Block changes to critical infrastructure
+  - name: "Protect deployment configs"
+    deny:
+      - "Dockerfile"
+      - "docker-compose.yml"
+      - ".github/workflows/*.yml"
+      - "nginx.conf"
+      - "requirements/base.txt"
+    on_violation: block
+
+  # Block changes to settings outside apps
+  - name: "Protect root config"
+    deny:
+      - "manage.py"
+      - "project/settings/*.py"
+      - "pyproject.toml"
+      - "requirements/*.txt"
+    on_violation: block
+
+  # Allow feature work in apps/
+  - name: "Feature development"
+    allow:
+      - "apps/**"
+      - "templates/**"
+      - "static/**"
+      - "media/**"
+    max_files: 15
+    max_lines: 500
+    on_violation: block
+
+  # Allow test changes
+  - name: "Test updates"
+    allow:
+      - "tests/**"
+      - "**/tests.py"
+      - "**/test_*.py"
+    max_files: 10
+    max_lines: 200
+    on_violation: warn
+
+  # Warn on changes outside allowed paths
+  - name: "Scope guard"
+    allow:
+      - "apps/**"
+      - "templates/**"
+      - "static/**"
+      - "media/**"
+      - "tests/**"
+      - "**/tests.py"
+      - "**/test_*.py"
+      - "*.md"
+      - "*.txt"
+      - "*.cfg"
+      - "*.ini"
+    on_violation: warn

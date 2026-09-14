@@ -1,0 +1,65 @@
+# React/Next.js project contract
+
+version: 1
+
+rules:
+  # Block changes to critical infrastructure
+  - name: "Protect CI/CD configs"
+    deny:
+      - ".github/workflows/*.yml"
+      - "Dockerfile"
+      - "docker-compose.yml"
+    on_violation: block
+
+  # Block changes to config files outside app/ and components/
+  - name: "Protect root config"
+    deny:
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig.json"
+      - "next.config.*"
+      - ".env*"
+    on_violation: block
+
+  # Allow feature work in app/, components/, lib/
+  - name: "Feature development"
+    allow:
+      - "app/**"
+      - "components/**"
+      - "lib/**"
+      - "pages/**"
+      - "src/**"
+      - "styles/**"
+      - "public/**"
+    max_files: 20
+    max_lines: 600
+    on_violation: block
+
+  # Allow test changes
+  - name: "Test updates"
+    allow:
+      - "tests/**"
+      - "__tests__/**"
+      - "*.test.*"
+      - "*.spec.*"
+    max_files: 10
+    max_lines: 300
+    on_violation: warn
+
+  # Warn on changes outside allowed paths
+  - name: "Scope guard"
+    allow:
+      - "app/**"
+      - "components/**"
+      - "lib/**"
+      - "pages/**"
+      - "src/**"
+      - "styles/**"
+      - "public/**"
+      - "tests/**"
+      - "__tests__/**"
+      - "*.test.*"
+      - "*.spec.*"
+      - "*.md"
+      - "*.json"
+    on_violation: warn

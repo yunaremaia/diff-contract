@@ -78,8 +78,14 @@ echo "src/foo.py" | diff-contract validate --from-stdin
 Create a starter `.diffcontract.yml`:
 
 ```bash
-diff-contract init    # creates .diffcontract.yml in current directory
+diff-contract init                    # default Python project contract
+diff-contract init --template react   # React/Next.js
+diff-contract init --template django  # Django
+diff-contract init --template rust    # Rust workspace
+diff-contract init --template docs    # documentation-only
 ```
+
+Ready-to-use templates for React, Django, Rust, and documentation-only projects are available in the [`examples/`](examples/) directory.
 
 ## Pre-commit hook
 

@@ -1,0 +1,58 @@
+# Rust workspace contract
+
+version: 1
+
+rules:
+  # Block changes to critical infrastructure
+  - name: "Protect CI/CD configs"
+    deny:
+      - ".github/workflows/*.yml"
+      - "Dockerfile"
+      - "docker-compose.yml"
+      - "rust-toolchain.toml"
+    on_violation: block
+
+  # Block root-level changes outside crates/
+  - name: "Protect workspace config"
+    deny:
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "deny.toml"
+      - "clippy.toml"
+      - "rustfmt.toml"
+    on_violation: block
+
+  # Allow feature work in crates/
+  - name: "Feature development"
+    allow:
+      - "crates/**"
+      - "src/**"
+      - "tests/**"
+      - "benches/**"
+      - "examples/**"
+    max_files: 15
+    max_lines: 500
+    on_violation: block
+
+  # Allow test changes
+  - name: "Test updates"
+    allow:
+      - "tests/**"
+      - "**/tests/*.rs"
+      - "**/tests/**/*.rs"
+      - "benches/**"
+    max_files: 10
+    max_lines: 200
+    on_violation: warn
+
+  # Warn on changes outside allowed paths
+  - name: "Scope guard"
+    allow:
+      - "crates/**"
+      - "src/**"
+      - "tests/**"
+      - "benches/**"
+      - "examples/**"
+      - "*.md"
+      - "*.toml"
+    on_violation: warn

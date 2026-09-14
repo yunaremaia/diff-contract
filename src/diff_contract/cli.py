@@ -84,6 +84,12 @@ def main(argv: list[str] | None = None) -> int:
 
     # `init` command
     init_parser = subparsers.add_parser("init", help="Create a sample .diffcontract.yml")
+    init_parser.add_argument(
+        "--template",
+        choices=["python", "react", "django", "rust", "docs"],
+        default="python",
+        help="Template type (default: python)",
+    )
 
     args = parser.parse_args(argv)
 
@@ -92,7 +98,7 @@ def main(argv: list[str] | None = None) -> int:
     elif args.command == "validate":
         return _cmd_validate(args)
     elif args.command == "init":
-        return _cmd_init()
+        return _cmd_init(args.template)
     else:
         parser.print_help()
         return 1
@@ -219,24 +225,38 @@ def _cmd_validate(args: argparse.Namespace) -> int:
     return 0
 
 
-def _cmd_init() -> int:
-    """Create a sample .diffcontract.yml."""
-    sample = """# .diff-contract.yml — Define allowed/denied file patterns for diffs
+def _cmd_init(template_type: str = "python") -> int:
+    """Create a sample .diffcontract.yml from a template."""
+    template = _TEMPLATES.get(template_type, _TEMPLATES["python"])
+    path = Path(".diffcontract.yml")
+    if path.exists():
+        print(f"WARNING: {path} already exists — not overwriting", file=sys.stderr)
+        return 1
+    path.write_text(template)
+    print(f"✓ Created {path} (template: {template_type})")
+    return 0
+
+
+_TEMPLATES = {
+    "python": """# .diffcontract.yml — Python project contract
 version: 1
 
 rules:
-  # Block changes to core files
-  - name: "Block core changes"
+  # Block changes to critical infrastructure
+  - name: "Protect CI/CD configs"
     deny:
-      - "src/core/**"
-      - "config/*.env"
+      - ".github/workflows/*.yml"
+      - "Dockerfile"
+      - "docker-compose.yml"
     on_violation: block
 
-  # Allow feature changes
-  - name: "Allow feature X"
+  # Allow feature work with limits
+  - name: "Feature development"
     allow:
-      - "src/features/X/**"
-      - "tests/features/X/**"
+      - "src/features/**"
+      - "tests/features/**"
+    max_files: 15
+    max_lines: 400
     on_violation: block
 
   # Warn on large diffs
@@ -244,14 +264,162 @@ rules:
     max_files: 20
     max_lines: 500
     on_violation: warn
-"""
-    path = Path(".diffcontract.yml")
-    if path.exists():
-        print(f"WARNING: {path} already exists — not overwriting", file=sys.stderr)
-        return 1
-    path.write_text(sample)
-    print(f"✓ Created {path}")
-    return 0
+""",
+    "react": """# React/Next.js project contract
+version: 1
+
+rules:
+  - name: "Protect CI/CD configs"
+    deny:
+      - ".github/workflows/*.yml"
+      - "Dockerfile"
+      - "docker-compose.yml"
+    on_violation: block
+
+  - name: "Protect root config"
+    deny:
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig.json"
+      - "next.config.*"
+      - ".env*"
+    on_violation: block
+
+  - name: "Feature development"
+    allow:
+      - "app/**"
+      - "components/**"
+      - "lib/**"
+      - "pages/**"
+      - "src/**"
+      - "styles/**"
+      - "public/**"
+    max_files: 20
+    max_lines: 600
+    on_violation: block
+
+  - name: "Test updates"
+    allow:
+      - "tests/**"
+      - "__tests__/**"
+      - "*.test.*"
+      - "*.spec.*"
+    max_files: 10
+    max_lines: 300
+    on_violation: warn
+""",
+    "django": """# Django project contract
+version: 1
+
+rules:
+  - name: "Protect deployment configs"
+    deny:
+      - "Dockerfile"
+      - "docker-compose.yml"
+      - ".github/workflows/*.yml"
+      - "requirements/base.txt"
+    on_violation: block
+
+  - name: "Protect root config"
+    deny:
+      - "manage.py"
+      - "project/settings/*.py"
+      - "pyproject.toml"
+      - "requirements/*.txt"
+    on_violation: block
+
+  - name: "Feature development"
+    allow:
+      - "apps/**"
+      - "templates/**"
+      - "static/**"
+      - "media/**"
+    max_files: 15
+    max_lines: 500
+    on_violation: block
+
+  - name: "Test updates"
+    allow:
+      - "tests/**"
+      - "**/tests.py"
+      - "**/test_*.py"
+    max_files: 10
+    max_lines: 200
+    on_violation: warn
+""",
+    "rust": """# Rust workspace contract
+version: 1
+
+rules:
+  - name: "Protect CI/CD configs"
+    deny:
+      - ".github/workflows/*.yml"
+      - "Dockerfile"
+      - "docker-compose.yml"
+      - "rust-toolchain.toml"
+    on_violation: block
+
+  - name: "Protect workspace config"
+    deny:
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "deny.toml"
+      - "clippy.toml"
+      - "rustfmt.toml"
+    on_violation: block
+
+  - name: "Feature development"
+    allow:
+      - "crates/**"
+      - "src/**"
+      - "tests/**"
+      - "benches/**"
+      - "examples/**"
+    max_files: 15
+    max_lines: 500
+    on_violation: block
+
+  - name: "Test updates"
+    allow:
+      - "tests/**"
+      - "**/tests/*.rs"
+      - "**/tests/**/*.rs"
+      - "benches/**"
+    max_files: 10
+    max_lines: 200
+    on_violation: warn
+""",
+    "docs": """# Documentation-only project contract
+version: 1
+
+rules:
+  - name: "Block source code changes"
+    deny:
+      - "src/**"
+      - "lib/**"
+      - "app/**"
+      - "packages/**"
+      - "*.py"
+      - "*.js"
+      - "*.ts"
+      - "*.rs"
+      - "*.go"
+    on_violation: block
+
+  - name: "Documentation updates"
+    allow:
+      - "docs/**"
+      - "*.md"
+      - "*.rst"
+      - "CHANGELOG*"
+      - "LICENSE*"
+      - "README*"
+    max_files: 30
+    max_lines: 1000
+    on_violation: block
+""",
+}
+
 
 
 if __name__ == "__main__":
