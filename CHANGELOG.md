@@ -1,21 +1,23 @@
 # Changelog
 
-All notable changes to diff-contract will be documented in this file.
+All notable changes to `diff-contract` are documented here.
+This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Documentation
+
+- Add GitHub issue templates (bug report, feature request) with `blank_issues_enabled: false` and contact links ([#10](https://github.com/yunaremaia/diff-contract/issues/10))
+- Add Dependabot configuration for weekly pip dependency updates
+- Expand SECURITY.md with supported-versions policy, end-of-life window, and detailed disclosure timeline
+
+## [0.2.0] - 2026-01-12
+
 ### Added
-- SARIF 2.1.0 output for GitHub Code Scanning integration (`--sarif` flag on `check` and `validate`)
-- `format` and `sarif-output` inputs to `action.yml` with SARIF upload step
 
-## [0.1.0] - 2026-09-11
+- Project-specific `.diffcontract.yml` templates (examples/)
+- `validate`, `init`, and pre-commit hook usage documentation
+- `max_files` and `max_lines` aggregate limit documentation
 
-### Added
-- Initial release: deterministic guardrails for AI-generated diffs
-- YAML contract format with allow/deny rules
-- Block/warn/report violation modes
-- GitHub Actions composite action
-- Pre-commit hook support
-
-### Added (2026-09-12)
-- `.pre-commit-hooks.yaml` for native pre-commit integration
+[unreleased]: https://github.com/yunaremaia/diff-contract/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/yunaremaia/diff-contract/releases/tag/v0.2.0

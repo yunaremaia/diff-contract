@@ -1,0 +1,9 @@
+blank_issues_enabled: false
+
+contact_links:
+  - name: diff-contract Discussions
+    url: https://github.com/yunaremaia/diff-contract/discussions
+    about: General questions, usage help, and feature brainstorming
+  - name: Documentation
+    url: https://github.com/yunaremaia/diff-contract#readme
+    about: Quickstart, config reference, and examples

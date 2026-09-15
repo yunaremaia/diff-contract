@@ -1,4 +1,3 @@
----
 name: Feature request
 about: Suggest a new feature or rule enhancement for diff-contract
 title: "[FEAT] "
