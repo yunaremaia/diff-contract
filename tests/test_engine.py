@@ -1,8 +1,7 @@
 """Tests for diff-contract rules engine."""
-import pytest
 
-from diff_contract.engine import RulesEngine, DiffCalculator, validate_diff
 from diff_contract.contract import Contract, ContractRule, ViolationSeverity
+from diff_contract.engine import DiffCalculator, RulesEngine, validate_diff
 
 
 class TestRulesEngineMaxLines:

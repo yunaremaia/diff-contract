@@ -1,7 +1,7 @@
 """Tests for diff-contract — contract parsing and validation."""
-import pytest
+
 import yaml
-from pathlib import Path
+
 from diff_contract.contract import ContractParser, ContractRule, ViolationSeverity
 from diff_contract.engine import DiffCalculator, RulesEngine, Violation
 
@@ -18,7 +18,7 @@ rules:
         data = yaml.safe_load(yaml_content)
         parser = ContractParser()
         contract = parser.parse(data)
-        
+
         assert len(contract.rules) == 1
         assert contract.rules[0].name == "Allow src"
         assert contract.rules[0].on_violation == ViolationSeverity.BLOCK
@@ -34,7 +34,7 @@ rules:
         data = yaml.safe_load(yaml_content)
         parser = ContractParser()
         contract = parser.parse(data)
-        
+
         assert len(contract.rules) == 1
         assert contract.rules[0].deny == ("src/core/**",)
 
@@ -49,7 +49,7 @@ rules:
         data = yaml.safe_load(yaml_content)
         parser = ContractParser()
         contract = parser.parse(data)
-        
+
         assert contract.rules[0].on_violation == ViolationSeverity.WARN
 
     def test_parse_empty_contract(self):
@@ -60,7 +60,7 @@ rules: []
         data = yaml.safe_load(yaml_content)
         parser = ContractParser()
         contract = parser.parse(data)
-        
+
         assert len(contract.rules) == 0
 
 
@@ -176,9 +176,8 @@ class TestDiffCalculator:
     def test_empty_diff(self):
         """Empty diff should return empty list."""
         calc = DiffCalculator(base_branch="main")
-        # This will fail without a real git repo, but tests the interface
-        # In real tests we'd mock subprocess
-        pass
+        assert calc.base_branch == "main"
+
 
 class TestViolation:
     def test_violation_str_block(self):

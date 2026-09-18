@@ -1,7 +1,7 @@
 """Tests for diff-contract init --template."""
+
 import subprocess
 import sys
-from pathlib import Path
 
 
 def test_init_template_help():
@@ -22,6 +22,7 @@ def test_init_template_help():
 def test_init_default_python(tmp_path):
     """init without --template creates Python contract."""
     import os
+
     old_cwd = os.getcwd()
     os.chdir(tmp_path)
     try:
@@ -43,6 +44,7 @@ def test_init_default_python(tmp_path):
 def test_init_template_react(tmp_path):
     """init --template react creates React contract."""
     import os
+
     old_cwd = os.getcwd()
     os.chdir(tmp_path)
     try:
@@ -64,6 +66,7 @@ def test_init_template_react(tmp_path):
 def test_init_template_django(tmp_path):
     """init --template django creates Django contract."""
     import os
+
     old_cwd = os.getcwd()
     os.chdir(tmp_path)
     try:
@@ -85,6 +88,7 @@ def test_init_template_django(tmp_path):
 def test_init_template_rust(tmp_path):
     """init --template rust creates Rust contract."""
     import os
+
     old_cwd = os.getcwd()
     os.chdir(tmp_path)
     try:
@@ -106,6 +110,7 @@ def test_init_template_rust(tmp_path):
 def test_init_template_docs(tmp_path):
     """init --template docs creates documentation-only contract."""
     import os
+
     old_cwd = os.getcwd()
     os.chdir(tmp_path)
     try:
@@ -127,6 +132,7 @@ def test_init_template_docs(tmp_path):
 def test_init_no_overwrite(tmp_path):
     """init does not overwrite existing contract."""
     import os
+
     old_cwd = os.getcwd()
     os.chdir(tmp_path)
     try:

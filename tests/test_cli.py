@@ -1,7 +1,6 @@
 """Tests for diff-contract CLI."""
+
 import subprocess
-import pytest
-from pathlib import Path
 
 
 class TestCli:
@@ -15,9 +14,7 @@ class TestCli:
 
     def test_check_valid_contract(self, tmp_path):
         contract = tmp_path / "contract.yaml"
-        contract.write_text(
-            "rules:\n  - name: no-todo\n    pattern: TODO\n    severity: warning\n"
-        )
+        contract.write_text("rules:\n  - name: no-todo\n    pattern: TODO\n    severity: warning\n")
         result = subprocess.run(
             ["python", "-m", "diff_contract.cli", "check", "--contract", str(contract)],
             capture_output=True,

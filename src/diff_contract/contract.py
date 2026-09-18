@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import enum
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any
 
 import yaml
 
@@ -28,11 +28,13 @@ class ContractRule:
     def matches_allow(self, file_path: str) -> bool:
         """Return True if file matches any allow glob."""
         import fnmatch
+
         return any(fnmatch.fnmatch(file_path, pattern) for pattern in self.allow)
 
     def matches_deny(self, file_path: str) -> bool:
         """Return True if file matches any deny glob."""
         import fnmatch
+
         return any(fnmatch.fnmatch(file_path, pattern) for pattern in self.deny)
 
 

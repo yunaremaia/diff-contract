@@ -1,10 +1,8 @@
 """Tests for the validate subcommand (no git dependency)."""
+
 from __future__ import annotations
-import pytest
-from pathlib import Path
 
 from diff_contract.cli import main
-from diff_contract.contract import load_contract
 
 
 class TestValidateCommand:
@@ -52,9 +50,20 @@ rules:
       - "src/core/**"
     on_violation: block
 """)
-        result = main(["validate", "--contract", str(contract), "--files", "src/core/main.py", "--output", "json"])
+        result = main(
+            [
+                "validate",
+                "--contract",
+                str(contract),
+                "--files",
+                "src/core/main.py",
+                "--output",
+                "json",
+            ]
+        )
         captured = capsys.readouterr()
         import json
+
         data = json.loads(captured.out)
         assert data["clean"] is False
         assert data["block_count"] == 1
@@ -82,5 +91,7 @@ rules: []
         assert result == 1
 
     def test_validate_missing_contract(self, tmp_path):
-        result = main(["validate", "--contract", "/nonexistent/.diffcontract.yml", "--files", "a.py"])
+        result = main(
+            ["validate", "--contract", "/nonexistent/.diffcontract.yml", "--files", "a.py"]
+        )
         assert result == 1

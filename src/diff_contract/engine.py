@@ -56,9 +56,7 @@ class RulesEngine:
         violations.extend(self._check_aggregate_rules(changed_files))
         return violations
 
-    def _check_aggregate_rules(
-        self, changed_files: Sequence[FileEntry]
-    ) -> list[Violation]:
+    def _check_aggregate_rules(self, changed_files: Sequence[FileEntry]) -> list[Violation]:
         """Check aggregate rules like max_files and max_lines."""
         violations: list[Violation] = []
         total_files = len(changed_files)
