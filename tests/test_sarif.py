@@ -4,10 +4,8 @@ from __future__ import annotations
 
 import json
 
-import pytest
-
-from diff_contract.engine import Violation, ViolationSeverity, RulesEngine
-from diff_contract.sarif import violations_to_sarif, sarif_to_string
+from diff_contract.engine import Violation, ViolationSeverity
+from diff_contract.sarif import sarif_to_string, violations_to_sarif
 
 
 class TestViolationsToSarif:
@@ -34,7 +32,10 @@ class TestViolationsToSarif:
         assert len(results) == 1
         assert results[0]["level"] == "error"
         assert results[0]["ruleId"] == "diff-contract/Block core changes"
-        assert results[0]["locations"][0]["physicalLocation"]["artifactLocation"]["uri"] == "src/core/main.py"
+        assert (
+            results[0]["locations"][0]["physicalLocation"]["artifactLocation"]["uri"]
+            == "src/core/main.py"
+        )
 
     def test_warn_violation(self) -> None:
         violations = [

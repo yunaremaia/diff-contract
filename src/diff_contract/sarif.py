@@ -43,9 +43,7 @@ def violations_to_sarif(
                         "text": f"Violates diff-contract rule '{v.rule}'. File: {v.file}",
                     },
                     "defaultConfiguration": {
-                        "level": "error"
-                        if v.severity.value == "block"
-                        else "warning",
+                        "level": "error" if v.severity.value == "block" else "warning",
                     },
                 }
             )

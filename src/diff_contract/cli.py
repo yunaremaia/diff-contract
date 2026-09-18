@@ -9,7 +9,7 @@ from pathlib import Path
 
 from diff_contract import __version__
 from diff_contract.contract import load_contract
-from diff_contract.engine import DiffCalculator, RulesEngine, Violation, ViolationSeverity
+from diff_contract.engine import DiffCalculator, RulesEngine, ViolationSeverity
 from diff_contract.sarif import violations_to_sarif
 
 
@@ -53,7 +53,9 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     # `validate` command (no git dependency)
-    validate_parser = subparsers.add_parser("validate", help="Validate files against contract (no git required)")
+    validate_parser = subparsers.add_parser(
+        "validate", help="Validate files against contract (no git required)"
+    )
     validate_parser.add_argument(
         "--contract",
         type=Path,
@@ -419,7 +421,6 @@ rules:
     on_violation: block
 """,
 }
-
 
 
 if __name__ == "__main__":
