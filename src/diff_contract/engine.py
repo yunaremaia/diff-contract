@@ -105,6 +105,15 @@ class RulesEngine:
         return None
 
 
+class GitDiffError(Exception):
+    """Raised when git diff command fails."""
+
+    def __init__(self, message: str, returncode: int = 1, stderr: str = "") -> None:
+        super().__init__(message)
+        self.returncode = returncode
+        self.stderr = stderr
+
+
 class DiffCalculator:
     """Calculate diff between current branch and base."""
 
@@ -113,7 +122,11 @@ class DiffCalculator:
         self.cwd = cwd
 
     def get_changed_files(self) -> list[dict]:
-        """Run git diff and return list of file change dicts with line counts."""
+        """Run git diff and return list of file change dicts with line counts.
+
+        Raises:
+            GitDiffError: If git diff fails or git executable is not found.
+        """
         try:
             result = subprocess.run(
                 ["git", "--no-pager", "diff", "--numstat", f"{self.base_branch}...HEAD"],
@@ -122,8 +135,19 @@ class DiffCalculator:
                 check=True,
                 cwd=self.cwd,
             )
-        except subprocess.CalledProcessError:
-            return []
+        except subprocess.CalledProcessError as e:
+            err_msg = (
+                e.stderr.strip()
+                if e.stderr
+                else f"git command failed with exit code {e.returncode}"
+            )
+            raise GitDiffError(
+                f"git diff failed: {err_msg}",
+                returncode=e.returncode,
+                stderr=e.stderr or "",
+            ) from e
+        except FileNotFoundError as e:
+            raise GitDiffError("git executable not found", returncode=127) from e
         return self._parse_numstat(result.stdout)
 
     def _parse_numstat(self, raw: str) -> list[dict]:
