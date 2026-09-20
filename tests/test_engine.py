@@ -1,7 +1,12 @@
 """Tests for diff-contract rules engine."""
 
+import subprocess
+from unittest.mock import MagicMock, patch
+
+import pytest
+
 from diff_contract.contract import Contract, ContractRule, ViolationSeverity
-from diff_contract.engine import DiffCalculator, RulesEngine, validate_diff
+from diff_contract.engine import DiffCalculator, GitDiffError, RulesEngine, validate_diff
 
 
 class TestRulesEngineMaxLines:
@@ -110,6 +115,69 @@ class TestDiffCalculator:
         calc = DiffCalculator()
         assert calc._parse_numstat("") == []
         assert calc._parse_numstat("   \n") == []
+
+    def test_get_changed_files_success(self):
+        """get_changed_files returns parsed change dicts on success."""
+        calc = DiffCalculator(base_branch="main")
+        mock_output = "3\t1\tsrc/file.py\n"
+        with patch("subprocess.run") as mock_run:
+            mock_run.return_value = MagicMock(stdout=mock_output, returncode=0)
+            files = calc.get_changed_files()
+            assert files == [{"path": "src/file.py", "added": 3, "deleted": 1, "lines": 4}]
+            mock_run.assert_called_once_with(
+                ["git", "--no-pager", "diff", "--numstat", "main...HEAD"],
+                capture_output=True,
+                text=True,
+                check=True,
+                cwd=None,
+            )
+
+    def test_get_changed_files_called_process_error_raises_git_diff_error(self):
+        """subprocess.CalledProcessError is not swallowed; raises GitDiffError."""
+        calc = DiffCalculator(base_branch="invalid-branch")
+        with patch("subprocess.run") as mock_run:
+            mock_run.side_effect = subprocess.CalledProcessError(
+                returncode=128,
+                cmd=["git", "diff"],
+                stderr="fatal: ambiguous argument 'invalid-branch...HEAD'",
+            )
+            with pytest.raises(GitDiffError) as exc_info:
+                calc.get_changed_files()
+            assert exc_info.value.returncode == 128
+            assert "fatal: ambiguous argument 'invalid-branch...HEAD'" in str(exc_info.value)
+            assert "fatal: ambiguous argument 'invalid-branch...HEAD'" in exc_info.value.stderr
+
+    def test_get_changed_files_called_process_error_empty_stderr(self):
+        """CalledProcessError with empty stderr formats error message with returncode."""
+        calc = DiffCalculator(base_branch="invalid-branch")
+        with patch("subprocess.run") as mock_run:
+            mock_run.side_effect = subprocess.CalledProcessError(
+                returncode=2,
+                cmd=["git", "diff"],
+                stderr="",
+            )
+            with pytest.raises(GitDiffError) as exc_info:
+                calc.get_changed_files()
+            assert exc_info.value.returncode == 2
+            assert "git command failed with exit code 2" in str(exc_info.value)
+
+    def test_get_changed_files_file_not_found_raises_git_diff_error(self):
+        """FileNotFoundError when git binary missing raises GitDiffError."""
+        calc = DiffCalculator(base_branch="main")
+        with patch("subprocess.run") as mock_run:
+            mock_run.side_effect = FileNotFoundError("git not found")
+            with pytest.raises(GitDiffError) as exc_info:
+                calc.get_changed_files()
+            assert exc_info.value.returncode == 127
+            assert "git executable not found" in str(exc_info.value)
+
+    def test_get_changed_files_real_git_failure_in_non_git_dir(self, tmp_path):
+        """Running in a non-git directory raises GitDiffError with git error details."""
+        calc = DiffCalculator(base_branch="main", cwd=tmp_path)
+        with pytest.raises(GitDiffError) as exc_info:
+            calc.get_changed_files()
+        assert exc_info.value.returncode != 0
+        assert "git diff failed" in str(exc_info.value)
 
 
 class TestValidateDiff:

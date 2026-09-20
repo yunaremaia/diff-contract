@@ -9,7 +9,12 @@ from pathlib import Path
 
 from diff_contract import __version__
 from diff_contract.contract import load_contract
-from diff_contract.engine import DiffCalculator, RulesEngine, ViolationSeverity
+from diff_contract.engine import (
+    DiffCalculator,
+    GitDiffError,
+    RulesEngine,
+    ViolationSeverity,
+)
 from diff_contract.sarif import violations_to_sarif
 
 
@@ -121,7 +126,11 @@ def _cmd_check(args: argparse.Namespace) -> int:
         changed_files: list = list(args.files)
     else:
         calc = DiffCalculator(base_branch=args.base)
-        changed_files = calc.get_changed_files()
+        try:
+            changed_files = calc.get_changed_files()
+        except GitDiffError as e:
+            print(f"ERROR: {e}", file=sys.stderr)
+            return 1
 
     # Validate
     engine = RulesEngine(contract.rules)
