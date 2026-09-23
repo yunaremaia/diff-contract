@@ -62,7 +62,11 @@ class ContractParser:
         try:
             severity = ViolationSeverity(severity_str)
         except ValueError:
-            severity = ViolationSeverity.BLOCK
+            valid = [s.value for s in ViolationSeverity]
+            raise ValueError(
+                f"Invalid on_violation value '{severity_str}' at rule {index}. "
+                f"Valid values: {valid}"
+            )
 
         allow = tuple(raw.get("allow", []))
         deny = tuple(raw.get("deny", []))
