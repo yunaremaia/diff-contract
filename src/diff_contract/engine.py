@@ -43,15 +43,27 @@ class RulesEngine:
         self.rules = list(rules)
 
     def check(self, changed_files: Sequence[FileEntry]) -> list[Violation]:
-        """Check changed files against all rules."""
+        """Check changed files against all rules.
+
+        All rules are evaluated for each file. Deny rules take precedence
+        over allow rules — if any deny rule matches, the file is blocked.
+        """
         violations: list[Violation] = []
         for file in changed_files:
             path = _extract_path(file)
+            file_violations: list[Violation] = []
+            has_deny = False
             for rule in self.rules:
                 v = self._check_file(path, rule)
                 if v is not None:
-                    violations.append(v)
-                    break  # first matching rule wins
+                    file_violations.append(v)
+                    if v.severity == ViolationSeverity.BLOCK:
+                        has_deny = True
+            # Deny rules take precedence — if any deny matched, report only denies
+            if has_deny:
+                violations.extend(v for v in file_violations if v.severity == ViolationSeverity.BLOCK)
+            else:
+                violations.extend(file_violations)
         # Check aggregate rules (max_files, max_lines)
         violations.extend(self._check_aggregate_rules(changed_files))
         return violations
