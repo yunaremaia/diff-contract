@@ -198,3 +198,7 @@ See [`examples/strict.yml`](examples/strict.yml) for a fuller contract that comb
 ## License
 
 MIT
+
+# diff-contract
+
+![CI](https://github.com/yunaremaia/diff-contract/actions/workflows/ci.yml/badge.svg)
