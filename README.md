@@ -1,5 +1,12 @@
 # diff-contract
 
+![CI](https://github.com/yunaremaia/diff-contract/actions/workflows/ci.yml/badge.svg)
+![Python](https://img.shields.io/badge/python-3.10-blue.svg)
+![License](https://img.shields.io/github/license/yunaremaia/diff-contract)
+![Release](https://img.shields.io/github/v/release/yunaremaia/diff-contract)
+![Stars](https://img.shields.io/github/stars/yunaremaia/diff-contract)
+
+
 **Deterministic guardrails for AI-generated diffs — define what files can change, block violations.**
 
 ```bash
@@ -194,6 +201,19 @@ In this contract:
 - Any diff larger than 20 files or 600 lines also produces a **warning** (exit 2 when nothing is blocked).
 
 See [`examples/strict.yml`](examples/strict.yml) for a fuller contract that combines deny rules with per-rule size budgets.
+
+
+If this tool is useful to you, a star helps other people find it.
+
+## Related tools
+
+- **[ci-test-gate](https://github.com/yunaremaia/ci-test-gate)** — block PRs until the required tests actually run
+- **[driftcheck](https://github.com/yunaremaia/driftcheck)** — detect version drift between docs and toolchain files
+- **[agent-guard](https://github.com/yunaremaia/agent-guard)** — enforce guardrails on AI agent tool calls
+- **[mcp-guard](https://github.com/yunaremaia/mcp-guard)** — audit MCP servers for unsafe permissions
+
+Part of a family of focused, single-purpose developer tools — each one does one thing
+and does it well.
 
 ## License
 
