@@ -218,7 +218,3 @@ and does it well.
 ## License
 
 MIT
-
-# diff-contract
-
-![CI](https://github.com/yunaremaia/diff-contract/actions/workflows/ci.yml/badge.svg)
