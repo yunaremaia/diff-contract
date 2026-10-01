@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "diff-contract"
-version = "0.1.0"
+version = "0.1.1"
 description = "Deterministic guardrails for AI-generated diffs — define what files can change, block violations."
 readme = "README.md"
 license = { text = "MIT" }
