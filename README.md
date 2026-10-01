@@ -3,6 +3,7 @@
 ![CI](https://github.com/yunaremaia/diff-contract/actions/workflows/ci.yml/badge.svg)
 ![Python](https://img.shields.io/badge/python-3.10-blue.svg)
 ![License](https://img.shields.io/github/license/yunaremaia/diff-contract)
+[![PyPI](https://img.shields.io/pypi/v/diff-contract)](https://pypi.org/project/diff-contract/)
 ![Release](https://img.shields.io/github/v/release/yunaremaia/diff-contract)
 ![Stars](https://img.shields.io/github/stars/yunaremaia/diff-contract)
 

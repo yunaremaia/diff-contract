@@ -12,6 +12,7 @@ requires-python = ">=3.10"
 authors = [
     { name = "Yunare Maia", email = "yunare@gmail.com" },
 ]
+keywords = ["guardrails", "diff", "code-review", "ai-agents", "policy", "sarif"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "License :: OSI Approved :: MIT License",
@@ -27,6 +28,9 @@ diff-contract = "diff_contract.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/yunaremaia/diff-contract"
+Issues = "https://github.com/yunaremaia/diff-contract/issues"
+Funding = "https://github.com/sponsors/yunaremaia"
+Changelog = "https://github.com/yunaremaia/diff-contract/blob/main/CHANGELOG.md"
 
 [tool.setuptools.packages.find]
 where = ["src"]
