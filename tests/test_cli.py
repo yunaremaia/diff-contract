@@ -70,15 +70,15 @@ class TestCli:
         )
         assert result.returncode == 0
 
-    def test_check_git_failure_non_git_repo(self, tmp_path):
+    def test_check_git_failure_non_git_repo(self, non_git_dir):
         """CLI check fails with exit code 1 when run in a non-git directory."""
-        contract = tmp_path / "contract.yaml"
+        contract = non_git_dir / "contract.yaml"
         contract.write_text("version: 1\nrules: []\n")
         result = subprocess.run(
             [sys.executable, "-m", "diff_contract.cli", "check", "--contract", str(contract)],
             capture_output=True,
             text=True,
-            cwd=str(tmp_path),
+            cwd=str(non_git_dir),
         )
         assert result.returncode == 1
         assert "ERROR: git diff failed" in result.stderr

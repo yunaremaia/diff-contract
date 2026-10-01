@@ -171,9 +171,9 @@ class TestDiffCalculator:
             assert exc_info.value.returncode == 127
             assert "git executable not found" in str(exc_info.value)
 
-    def test_get_changed_files_real_git_failure_in_non_git_dir(self, tmp_path):
+    def test_get_changed_files_real_git_failure_in_non_git_dir(self, non_git_dir):
         """Running in a non-git directory raises GitDiffError with git error details."""
-        calc = DiffCalculator(base_branch="main", cwd=tmp_path)
+        calc = DiffCalculator(base_branch="main", cwd=non_git_dir)
         with pytest.raises(GitDiffError) as exc_info:
             calc.get_changed_files()
         assert exc_info.value.returncode != 0
