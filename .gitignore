@@ -50,6 +50,13 @@ coverage.xml
 .pytest_cache/
 pytestdebug.log
 
+# Type checkers / linters
+.mypy_cache/
+.ruff_cache/
+
+# Logs
+*.log
+
 # Translations
 *.mo
 *.pot
