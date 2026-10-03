@@ -1,11 +1,6 @@
 # diff-contract
 
-![CI](https://github.com/yunaremaia/diff-contract/actions/workflows/ci.yml/badge.svg)
-![Python](https://img.shields.io/badge/python-3.10-blue.svg)
-![License](https://img.shields.io/github/license/yunaremaia/diff-contract)
-[![PyPI](https://img.shields.io/pypi/v/diff-contract)](https://pypi.org/project/diff-contract/)
-![Release](https://img.shields.io/github/v/release/yunaremaia/diff-contract)
-![Stars](https://img.shields.io/github/stars/yunaremaia/diff-contract)
+[![CI](https://github.com/yunaremaia/diff-contract/actions/workflows/ci.yml/badge.svg)](https://github.com/yunaremaia/diff-contract/actions/workflows/ci.yml) [![PyPI](https://img.shields.io/pypi/v/diff-contract)](https://pypi.org/project/diff-contract/) [![Downloads](https://img.shields.io/pypi/dm/diff-contract)](https://pypi.org/project/diff-contract/) [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/) [![License](https://img.shields.io/github/license/yunaremaia/diff-contract)](https://github.com/yunaremaia/diff-contract/blob/main/LICENSE) [![Release](https://img.shields.io/github/v/release/yunaremaia/diff-contract)](https://github.com/yunaremaia/diff-contract/releases/latest) [![Stars](https://img.shields.io/github/stars/yunaremaia/diff-contract)](https://github.com/yunaremaia/diff-contract)
 
 
 **Deterministic guardrails for AI-generated diffs — define what files can change, block violations.**
