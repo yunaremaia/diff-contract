@@ -76,6 +76,69 @@ class TestRulesEngineMaxLines:
         # 0 lines total < 5 → no violation
         assert not any(v.file == "<aggregate>" for v in violations)
 
+    def test_max_files_at_limit_is_not_a_violation(self):
+        """A diff of exactly max_files is within budget; the limit is exclusive.
+
+        README: "max_files | Maximum number of changed files in the diff". A diff
+        that lands exactly on the cap is legal. An off-by-one flip to >= would block
+        a diff the contract explicitly permits.
+        """
+        rule = ContractRule(
+            name="size",
+            max_files=3,
+            on_violation=ViolationSeverity.BLOCK,
+        )
+        violations = RulesEngine([rule]).check(["a.py", "b.py", "c.py"])
+        assert not any(v.file == "<aggregate>" for v in violations)
+
+    def test_max_lines_at_limit_is_not_a_violation(self):
+        """A diff of exactly max_lines is within budget; the limit is exclusive."""
+        rule = ContractRule(
+            name="size",
+            max_lines=10,
+            on_violation=ViolationSeverity.BLOCK,
+        )
+        files = [{"path": "a.py", "lines": 6}, {"path": "b.py", "lines": 4}]
+        violations = RulesEngine([rule]).check(files)
+        assert not any(v.file == "<aggregate>" for v in violations)
+
+    @pytest.mark.parametrize(
+        ("severity", "expected"),
+        [
+            (ViolationSeverity.WARN, ViolationSeverity.WARN),
+            (ViolationSeverity.BLOCK, ViolationSeverity.BLOCK),
+        ],
+    )
+    def test_max_files_aggregate_violation_uses_configured_severity(self, severity, expected):
+        """A max_files breach must carry the rule's own on_violation severity.
+
+        README exit-code contract: block breaches exit 1, warn breaches exit 2. If
+        the aggregate violation hardcoded a severity, the CLI's has_block/has_warn
+        branch would pick the wrong exit code for every oversized diff. Asserted in
+        both directions so neither hardcoded value can slip through.
+        """
+        rule = ContractRule(
+            name="size",
+            max_files=2,
+            on_violation=severity,
+        )
+        violations = RulesEngine([rule]).check(["a.py", "b.py", "c.py"])
+        aggregate = [v for v in violations if v.file == "<aggregate>"]
+        assert len(aggregate) == 1
+        assert aggregate[0].severity == expected
+
+    def test_max_lines_aggregate_violation_uses_configured_severity(self):
+        """Same severity-passthrough guarantee for max_lines breaches."""
+        rule = ContractRule(
+            name="size",
+            max_lines=1,
+            on_violation=ViolationSeverity.WARN,
+        )
+        violations = RulesEngine([rule]).check([{"path": "a.py", "lines": 10}])
+        aggregate = [v for v in violations if v.file == "<aggregate>"]
+        assert len(aggregate) == 1
+        assert aggregate[0].severity == ViolationSeverity.WARN
+
     def test_max_files_still_works(self):
         """max_files aggregate rule still functions after fix."""
         rule = ContractRule(
