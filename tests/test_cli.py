@@ -152,5 +152,10 @@ class TestCli:
             capture_output=True,
             text=True,
         )
+        from diff_contract import __version__
+
         assert result.returncode == 0
-        assert "0.1.1" in result.stdout
+        # Read the version from the package instead of hardcoding it: this test
+        # used to assert "0.1.1" and went on passing through the 0.1.2 release,
+        # because nothing tied the reported number to the packaging metadata.
+        assert result.stdout.strip() == f"diff-contract {__version__}"
