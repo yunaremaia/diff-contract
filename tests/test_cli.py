@@ -153,4 +153,9 @@ class TestCli:
             text=True,
         )
         assert result.returncode == 0
-        assert "0.1.1" in result.stdout
+        # Compare against the module rather than a hardcoded number: pinning the
+        # literal here meant this test went stale with __version__ instead of
+        # catching the release that bumped pyproject.toml without it.
+        import diff_contract
+
+        assert diff_contract.__version__ in result.stdout
