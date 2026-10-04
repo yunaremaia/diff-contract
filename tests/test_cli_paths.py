@@ -121,6 +121,68 @@ class TestCheckMissingContract:
         assert "Contract not found" in rec.stderr
 
 
+class TestMalformedContract:
+    """A contract the parser rejects must be a one-line error, never a traceback.
+
+    Each body below is a reproducer from #95. Before load_contract() was
+    wrapped, every one of them escaped as a raw Python traceback: nine library
+    frames for what is a one-character typo. The contract file is the user's
+    input, so a parse failure is an expected outcome of the command, not a bug
+    in it — and the exit code must stay 1 so scripts see a contract failure
+    rather than a crash.
+    """
+
+    MALFORMED = {
+        "bad_on_violation": "version: 1\nrules:\n  - name: X\n    on_violation: critcal\n",
+        "list_document_root": "- a\n- b\n",
+        "bare_string_rules": 'version: 1\nrules: "src/**"\n',
+        "string_allow_field": 'version: 1\nrules:\n  - name: X\n    allow: "src/**"\n',
+    }
+
+    @pytest.mark.parametrize("case", sorted(MALFORMED))
+    def test_check_reports_a_malformed_contract_without_a_traceback(self, tmp_path, case):
+        contract = write_contract(tmp_path / "bad.yml", self.MALFORMED[case])
+        rec = Recorder()
+
+        rc = rec.run(["check", "--contract", str(contract), "--files", "a.py"])
+
+        assert rc == 1
+        err = rec.stderr
+        assert f"ERROR: Invalid contract {contract}:" in err
+        # The whole point of the fix: no library frames leak to the user.
+        assert "Traceback" not in err
+        assert "diff_contract" not in err
+        # A parse failure must not read as a clean run on stdout.
+        assert "clean" not in rec.stdout
+
+    @pytest.mark.parametrize("case", sorted(MALFORMED))
+    def test_validate_reports_a_malformed_contract_without_a_traceback(self, tmp_path, case):
+        """_cmd_validate is a separate call site and needs the same guarantee."""
+        contract = write_contract(tmp_path / "bad.yml", self.MALFORMED[case])
+        rec = Recorder()
+
+        rc = rec.run(["validate", "--contract", str(contract), "--files", "a.py"])
+
+        assert rc == 1
+        err = rec.stderr
+        assert f"ERROR: Invalid contract {contract}:" in err
+        assert "Traceback" not in err
+
+    def test_the_parser_message_is_preserved_in_the_error_line(self, tmp_path):
+        """Wrapping must not swallow the detail that tells the user what to fix."""
+        contract = write_contract(
+            tmp_path / "bad.yml", self.MALFORMED["bad_on_violation"]
+        )
+        rec = Recorder()
+
+        rec.run(["check", "--contract", str(contract), "--files", "a.py"])
+
+        # The rule index and the valid values both survive into the one line.
+        assert "critcal" in rec.stderr
+        assert "rule 0" in rec.stderr
+        assert "block" in rec.stderr
+
+
 class TestCheckFileSelection:
     def test_files_flag_bypasses_git_entirely(self, non_git_dir, tmp_path):
         """--files must work where git cannot run at all (CI without a checkout)."""

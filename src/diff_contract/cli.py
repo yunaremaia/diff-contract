@@ -119,7 +119,11 @@ def _cmd_check(args: argparse.Namespace) -> int:
         print(f"ERROR: Contract not found: {contract_path}", file=sys.stderr)
         return 1
 
-    contract = load_contract(contract_path)
+    try:
+        contract = load_contract(contract_path)
+    except (ValueError, AttributeError, TypeError) as e:
+        print(f"ERROR: Invalid contract {contract_path}: {e}", file=sys.stderr)
+        return 1
 
     # Get changed files
     if args.files:
@@ -182,7 +186,11 @@ def _cmd_validate(args: argparse.Namespace) -> int:
         print(f"ERROR: Contract not found: {contract_path}", file=sys.stderr)
         return 1
 
-    contract = load_contract(contract_path)
+    try:
+        contract = load_contract(contract_path)
+    except (ValueError, AttributeError, TypeError) as e:
+        print(f"ERROR: Invalid contract {contract_path}: {e}", file=sys.stderr)
+        return 1
 
     # Get changed files
     if args.from_stdin:
