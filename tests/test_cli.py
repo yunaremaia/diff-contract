@@ -155,7 +155,7 @@ class TestCli:
         from diff_contract import __version__
 
         assert result.returncode == 0
-        # Read the version from the package instead of hardcoding it: this test
-        # used to assert "0.1.1" and went on passing through the 0.1.2 release,
-        # because nothing tied the reported number to the packaging metadata.
+# Tie the reported number to the packaging metadata rather than pinning a
+        # literal: this test used to assert "0.1.1" and went on passing through the
+        # 0.1.2 release, because nothing tied __version__ to pyproject.toml.
         assert result.stdout.strip() == f"diff-contract {__version__}"
