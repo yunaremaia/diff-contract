@@ -327,3 +327,79 @@ class TestViolation:
         )
         assert "WARN" in str(v)
         assert "src/app.py" in str(v)
+
+    def test_parse_bare_string_allow_raises_value_error(self):
+        """A bare YAML string for allow must raise, not silently become per-char tuples."""
+        from diff_contract.contract import ContractParser
+
+        data = yaml.safe_load(
+            """
+version: 1
+rules:
+  - name: "Bad allow"
+    allow: "src/**"
+    on_violation: block
+"""
+        )
+        parser = ContractParser()
+        with pytest.raises(ValueError) as exc_info:
+            parser.parse(data)
+        assert "allow" in str(exc_info.value)
+        assert "src/**" in str(exc_info.value)
+
+    def test_parse_bare_string_deny_raises_value_error(self):
+        """A bare YAML string for deny must raise, not silently become per-char tuples."""
+        from diff_contract.contract import ContractParser
+
+        data = yaml.safe_load(
+            """
+version: 1
+rules:
+  - name: "Bad deny"
+    deny: "*.env"
+    on_violation: block
+"""
+        )
+        parser = ContractParser()
+        with pytest.raises(ValueError) as exc_info:
+            parser.parse(data)
+        assert "deny" in str(exc_info.value)
+        assert "*.env" in str(exc_info.value)
+
+    def test_parse_allow_null_treated_as_absent(self):
+        """allow: null must be treated as absent (empty tuple)."""
+        from diff_contract.contract import ContractParser
+
+        data = yaml.safe_load(
+            """
+version: 1
+rules:
+  - name: "Null allow"
+    allow: null
+    deny: []
+    on_violation: block
+"""
+        )
+        parser = ContractParser()
+        contract = parser.parse(data)
+        assert contract.rules[0].allow == ()
+
+    def test_parse_non_string_list_entry_raises(self):
+        """A list with a non-string entry must raise with a clear message."""
+        from diff_contract.contract import ContractParser
+
+        data = yaml.safe_load(
+            """
+version: 1
+rules:
+  - name: "Bad list"
+    allow: ["src/**", 123]
+    deny: []
+    on_violation: block
+"""
+        )
+        parser = ContractParser()
+        with pytest.raises(ValueError) as exc_info:
+            parser.parse(data)
+        assert "allow" in str(exc_info.value)
+        assert "123" in str(exc_info.value)

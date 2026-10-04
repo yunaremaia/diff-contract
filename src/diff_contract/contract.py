@@ -44,6 +44,36 @@ class Contract:
     rules: tuple[ContractRule, ...] = ()
 
 
+def _as_pattern_tuple(raw: Any, field: str, index: int) -> tuple[str, ...]:
+    """Parse and validate an allow/deny field as a list of glob strings.
+
+    Raises ValueError with a clear message if the field is not a list of strings,
+    so that a bare YAML string (which tuple() silently splits into characters)
+    produces a readable error instead of a silent no-op.
+    """
+    value = raw.get(field, [])
+    if value is None:
+        return ()
+    if isinstance(value, str):
+        raise ValueError(
+            f"Invalid '{field}' value at rule {index}: expected a list of glob "
+            f"strings, got the string {value!r}. Did you mean:\n"
+            f"  {field}:\n    - \"{value}\""
+        )
+    if not isinstance(value, (list, tuple)):
+        raise ValueError(
+            f"Invalid '{field}' value at rule {index}: expected a list of glob "
+            f"strings, got {type(value).__name__}"
+        )
+    bad = [p for p in value if not isinstance(p, str)]
+    if bad:
+        raise ValueError(
+            f"Invalid '{field}' entry at rule {index}: expected a string, "
+            f"got {bad!r}"
+        )
+    return tuple(value)
+
+
 class ContractParser:
     """Parse contract from YAML dict."""
 
@@ -68,8 +98,8 @@ class ContractParser:
                 f"Valid values: {valid}"
             )
 
-        allow = tuple(raw.get("allow", []))
-        deny = tuple(raw.get("deny", []))
+        allow = _as_pattern_tuple(raw, "allow", index)
+        deny = _as_pattern_tuple(raw, "deny", index)
         max_files = raw.get("max_files")
         max_lines = raw.get("max_lines")
 
