@@ -152,10 +152,10 @@ class TestCli:
             capture_output=True,
             text=True,
         )
-        assert result.returncode == 0
-        # Compare against the module rather than a hardcoded number: pinning the
-        # literal here meant this test went stale with __version__ instead of
-        # catching the release that bumped pyproject.toml without it.
-        import diff_contract
+        from diff_contract import __version__
 
-        assert diff_contract.__version__ in result.stdout
+        assert result.returncode == 0
+# Tie the reported number to the packaging metadata rather than pinning a
+        # literal: this test used to assert "0.1.1" and went on passing through the
+        # 0.1.2 release, because nothing tied __version__ to pyproject.toml.
+        assert result.stdout.strip() == f"diff-contract {__version__}"
