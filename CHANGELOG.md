@@ -5,6 +5,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+
+- `Programming Language :: Python :: 3.14` classifier and a `3.14` leg in the CI test matrix. `requires-python` was already `>=3.10`, but PyPI's version filter hides the package from anyone filtering by 3.13 or 3.14 because the classifiers stopped at 3.12. The full suite (150 tests) passes on CPython 3.14.7.
+
 ### Documentation
 
 - Add GitHub issue templates (bug report, feature request) with `blank_issues_enabled: false` and contact links ([#10](https://github.com/yunaremaia/diff-contract/issues/10))
