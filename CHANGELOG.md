@@ -5,9 +5,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.1.6] - 2026-10-05
+
 ### Added
 
-- `Programming Language :: Python :: 3.14` classifier and a `3.14` leg in the CI test matrix. `requires-python` was already `>=3.10`, but PyPI's version filter hides the package from anyone filtering by 3.13 or 3.14 because the classifiers stopped at 3.12. The full suite (150 tests) passes on CPython 3.14.7.
+- `Programming Language :: Python :: 3.13` classifier and a `3.13` leg in the CI test matrix (now 3.10 / 3.11 / 3.12 / 3.13 / 3.14). The classifiers skipped 3.13, so PyPI's version filter hid `diff-contract` from anyone filtering by the Python they actually run, even though the package installs and works there. The classifier is only correct because the full suite was run on CPython 3.13.16 first: 153 passed.
+
+- `tests/test_pypi_metadata.py::test_the_declared_versions_are_a_contiguous_run` derives the expected version set from the `requires-python` floor up to the highest declared classifier. The existing classifier/CI-matrix agreement test compares two hand-maintained lists and therefore cannot fail on a version missing from both — the blind spot that let this gap ship with a green suite.
 
 ### Documentation
 
