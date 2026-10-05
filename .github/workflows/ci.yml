@@ -5,6 +5,7 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   test:
@@ -20,3 +21,47 @@ jobs:
       - run: pip install -e ".[dev]"
       - run: python -m pytest tests/ -v
       - run: python -m diff_contract.cli --version
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - run: pip install mkdocs mkdocs-material
+      # --strict turns an INFO about a broken intra-doc link into a build
+      # failure, so a nav entry or anchor typo cannot merge silently.
+      - run: mkdocs build --strict
+      # Without site_url, mkdocs emits an EMPTY <urlset/> and the site drops
+      # out of sitemap-based discovery entirely. A green build proves nothing
+      # about this, so assert on the artifact instead.
+      - name: Assert the sitemap has entries
+        run: |
+          test -f site/sitemap.xml
+          count=$(grep -c '<url>' site/sitemap.xml || true)
+          echo "sitemap entries: $count"
+          test "$count" -gt 0
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: site/
+
+  deploy-docs:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [test, docs]
+    runs-on: ubuntu-latest
+    # The concurrency group belongs on the JOB, not the workflow: a
+    # workflow-level group would let an older commit reaching deploy cancel a
+    # newer commit's still-running test matrix.
+    concurrency:
+      group: pages-deploy-${{ github.ref }}
+      cancel-in-progress: true
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

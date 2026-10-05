@@ -82,3 +82,6 @@ venv.bak/
 .DS_Store
 Thumbs.db
 .diffcontract.yml
+
+# MkDocs build output
+site/
