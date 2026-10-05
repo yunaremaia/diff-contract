@@ -11,6 +11,20 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Add Dependabot configuration for weekly pip dependency updates
 - Expand SECURITY.md with supported-versions policy, end-of-life window, and detailed disclosure timeline
 
+## [0.1.4] - 2026-10-05
+
+### Fixed
+
+- **The published pre-commit hook failed on every run.** `.pre-commit-hooks.yaml` declared `entry: diff-contract check`, but `check` takes no positional arguments, so pre-commit's appended staged filenames were rejected by argparse (`unrecognized arguments`, exit 2). Anyone installing the hook with a matching file staged got a hard failure. The entry is now `diff-contract check --files`, which accepts the appended list.
+
+### Changed
+
+- `Homepage` in the packaging metadata now points at the documentation site instead of repeating `Source`, so the two prominent PyPI sidebar slots carry different destinations.
+
+### Added
+
+- `tests/test_precommit_hook.py` parses the real hook manifest and runs the CLI the way pre-commit invokes it, so a manifest that cannot accept appended filenames fails CI instead of failing a user's commit.
+
 ## [0.1.3] - 2026-10-05
 
 ### Added
