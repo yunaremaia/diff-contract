@@ -10,6 +10,7 @@ notices until the next release is cut.
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 try:  # Python 3.11+
@@ -38,6 +39,25 @@ def _classifier_versions() -> list[str]:
         for c in PROJECT.get("classifiers") or []
         if c.startswith(prefix) and (v := c.removeprefix(prefix)) and v[0].isdigit() and "." in v
     ]
+
+
+def _required_versions() -> set[str]:
+    """Versions implied by the manifest: floor from ``requires-python``, ceiling
+    from the highest classifier declared.
+
+    Derived, not hand-written. A literal like ``{"3.10", "3.11", "3.12", "3.13"}``
+    cannot notice a version missing from that literal, which is how 3.13 was
+    absent from the classifiers while the suite stayed green and
+    ``requires-python = ">=3.10"`` claimed it.
+    """
+    floor_match = re.search(r">=(\d+)\.(\d+)", PROJECT["requires-python"])
+    assert floor_match, f"cannot read a floor from requires-python {PROJECT['requires-python']!r}"
+    floor = tuple(int(part) for part in floor_match.groups())
+    ceiling = max(tuple(int(p) for p in v.split(".")) for v in _classifier_versions())
+    # CPython minor versions are contiguous within a major, so the run from
+    # (major, minor) floor to (major, minor) ceiling is a simple count.
+    assert floor[0] == ceiling[0], f"range spans majors: {floor} to {ceiling}"
+    return {f"{floor[0]}.{minor}" for minor in range(floor[1], ceiling[1] + 1)}
 
 
 def _matrix_versions() -> list[str]:
@@ -87,6 +107,34 @@ def test_classifiers_and_ci_matrix_agree() -> None:
         f"classifiers claim {sorted(classified)} but CI tests {sorted(tested)}; "
         "a version advertised on PyPI is an untested claim, and a tested version "
         "missing a classifier is hidden from the PyPI filter"
+    )
+
+
+def test_the_declared_versions_are_a_contiguous_run() -> None:
+    """No hole between the ``requires-python`` floor and the newest classifier.
+
+    ``requires-python = ">=3.10"`` together with a ``3.14`` classifier *implies*
+    3.11, 3.12 and 3.13: pip installs this package on each. Every version in
+    that interval must be classified (or PyPI's version filter hides it) and on
+    a CI leg (or the claim is untested).
+
+    Deriving the set from both ends of the range is what makes this catch the
+    real bug. ``test_classifiers_and_ci_matrix_agree`` compares two hand-typed
+    lists, so dropping 3.13 out of *both* left it passing -- the blind spot that
+    let the gap ship in the first place.
+    """
+    required = _required_versions()
+    declared = set(_classifier_versions())
+    missing = sorted(required - declared, key=lambda v: tuple(int(p) for p in v.split(".")))
+    assert not missing, (
+        f"Python {missing} is installable (requires-python {PROJECT['requires-python']!r}) "
+        f"and sits below the newest declared classifier, but carries no "
+        f"Programming Language :: Python :: classifier, so PyPI's version filter "
+        f"hides the package from users on {missing[0]}"
+    )
+    assert not (declared - required), (
+        f"classifiers declare {sorted(declared - required)}, which requires-python "
+        f"{PROJECT['requires-python']!r} does not permit installing"
     )
 
 
