@@ -53,15 +53,17 @@ class RulesEngine:
             path = _extract_path(file)
             file_violations: list[Violation] = []
             has_deny = False
+            deny_violations: list[Violation] = []
             for rule in self.rules:
                 v = self._check_file(path, rule)
                 if v is not None:
                     file_violations.append(v)
-                    if v.severity == ViolationSeverity.BLOCK:
+                    if rule.matches_deny(path):
                         has_deny = True
+                        deny_violations.append(v)
             # Deny rules take precedence — if any deny matched, report only denies
             if has_deny:
-                violations.extend(v for v in file_violations if v.severity == ViolationSeverity.BLOCK)
+                violations.extend(deny_violations)
             else:
                 violations.extend(file_violations)
         # Check aggregate rules (max_files, max_lines)

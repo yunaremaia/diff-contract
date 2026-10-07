@@ -288,3 +288,72 @@ class TestValidateDiff:
         files = ["a.py", "b.py"]
         violations = validate_diff(contract, files)
         assert len(violations) == 1
+
+
+class TestHasDenyPrecedence:
+    """Tests for has_deny precedence logic — bug fix for issue #101."""
+
+    def test_deny_with_warn_severity_not_dropped_when_other_rule_blocks(self):
+        """A deny rule with on_violation: warn must not be dropped when another rule blocks.
+        
+        Bug: has_deny was set from severity==BLOCK, so a deny rule with warn severity
+        was dropped from the report whenever another rule blocked the file.
+        """
+        deny_rule = ContractRule(
+            name="Warn on secrets",
+            deny=("secrets/**", "config/keys.py"),
+            on_violation=ViolationSeverity.WARN,
+        )
+        allow_rule = ContractRule(
+            name="Allow src and config",
+            allow=("src/**", "config/**"),
+            on_violation=ViolationSeverity.BLOCK,
+        )
+        engine = RulesEngine(rules=[deny_rule, allow_rule])
+        
+        # File matches deny rule (secrets/keys.py) and is not allowed by allow rule
+        files = ["secrets/keys.py"]
+        violations = engine.check(files)
+        
+        # Both violations should be present: the deny (warn) and the allow (block)
+        # The deny violation must NOT be dropped
+        deny_violations = [v for v in violations if v.rule == "Warn on secrets"]
+        assert len(deny_violations) == 1
+        assert deny_violations[0].severity == ViolationSeverity.WARN
+
+    def test_deny_with_block_severity_still_takes_precedence(self):
+        """A deny rule with on_violation: block still takes precedence over allow violations."""
+        deny_rule = ContractRule(
+            name="Block secrets",
+            deny=("secrets/**",),
+            on_violation=ViolationSeverity.BLOCK,
+        )
+        allow_rule = ContractRule(
+            name="Allow src",
+            allow=("src/**",),
+            on_violation=ViolationSeverity.BLOCK,
+        )
+        engine = RulesEngine(rules=[deny_rule, allow_rule])
+        
+        files = ["secrets/keys.py"]
+        violations = engine.check(files)
+        
+        # Only the deny violation should be present (deny takes precedence)
+        assert len(violations) == 1
+        assert violations[0].rule == "Block secrets"
+        assert violations[0].severity == ViolationSeverity.BLOCK
+
+    def test_allow_only_violations_not_affected_by_deny_precedence(self):
+        """When no deny rule matches, all violations are reported normally."""
+        allow_rule = ContractRule(
+            name="Allow src",
+            allow=("src/**",),
+            on_violation=ViolationSeverity.BLOCK,
+        )
+        engine = RulesEngine(rules=[allow_rule])
+        
+        files = ["secrets/keys.py", "README.md"]
+        violations = engine.check(files)
+        
+        # Both files violate the allow rule
+        assert len(violations) == 2
