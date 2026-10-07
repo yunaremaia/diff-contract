@@ -47,7 +47,7 @@ classifiers = [
 dependencies = ["pyyaml>=6.0"]
 
 [project.optional-dependencies]
-dev = ["mypy>=1.10", "pytest>=8.0", "ruff>=0.5", "types-PyYAML"]
+dev = ["mypy>=1.10", "pytest>=8.0", "ruff>=0.16.10", "types-PyYAML"]
 
 [project.scripts]
 diff-contract = "diff_contract.cli:main"
