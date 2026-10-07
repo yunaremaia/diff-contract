@@ -173,6 +173,14 @@ class TestDiffCalculator:
         result = calc._parse_numstat(raw)
         assert result[0] == {"path": "image.png", "added": 0, "deleted": 0, "lines": 0}
 
+    def test_parse_numstat_rename_path(self):
+        """Rename paths with => must use the destination path (issue #93)."""
+        calc = DiffCalculator()
+        raw = "3\t1\tsrc/old.py => secrets/new.py\n"
+        result = calc._parse_numstat(raw)
+        assert len(result) == 1
+        assert result[0]["path"] == "secrets/new.py"
+
     def test_parse_numstat_empty(self):
         """Empty input returns empty list."""
         calc = DiffCalculator()

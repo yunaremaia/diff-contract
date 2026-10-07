@@ -126,7 +126,7 @@ def _cmd_check(args: argparse.Namespace) -> int:
         return 1
 
     # Get changed files
-    if args.files:
+    if args.files is not None:
         changed_files: list = list(args.files)
     else:
         calc = DiffCalculator(base_branch=args.base)

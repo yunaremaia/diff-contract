@@ -178,7 +178,7 @@ class DiffCalculator:
                     deleted = int(parts[1])
                 except ValueError:
                     deleted = 0
-                path = parts[2]
+                path = parts[2].split("=>")[-1].strip()
                 changes.append(
                     {
                         "path": path,

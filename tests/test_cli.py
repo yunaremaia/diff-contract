@@ -146,6 +146,19 @@ class TestCli:
         assert result.returncode == 0
         assert "usage" in result.stdout.lower() or "help" in result.stdout.lower()
 
+    def test_check_files_empty_list_no_git_fallback(self, non_git_dir):
+        """--files with zero paths must not fall back to git diff (issue #94)."""
+        contract = non_git_dir / "contract.yaml"
+        contract.write_text("version: 1\nrules: []\n")
+        result = subprocess.run(
+            [
+                sys.executable, "-m", "diff_contract.cli", "check",
+                "--contract", str(contract), "--files",
+            ],
+            capture_output=True, text=True, cwd=str(non_git_dir),
+        )
+        assert result.returncode == 0
+
     def test_version(self):
         result = subprocess.run(
             [sys.executable, "-m", "diff_contract.cli", "--version"],
