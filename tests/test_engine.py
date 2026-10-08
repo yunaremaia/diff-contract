@@ -295,7 +295,7 @@ class TestHasDenyPrecedence:
 
     def test_deny_with_warn_severity_not_dropped_when_other_rule_blocks(self):
         """A deny rule with on_violation: warn must not be dropped when another rule blocks.
-        
+
         Bug: has_deny was set from severity==BLOCK, so a deny rule with warn severity
         was dropped from the report whenever another rule blocked the file.
         """
@@ -310,11 +310,11 @@ class TestHasDenyPrecedence:
             on_violation=ViolationSeverity.BLOCK,
         )
         engine = RulesEngine(rules=[deny_rule, allow_rule])
-        
+
         # File matches deny rule (secrets/keys.py) and is not allowed by allow rule
         files = ["secrets/keys.py"]
         violations = engine.check(files)
-        
+
         # Both violations should be present: the deny (warn) and the allow (block)
         # The deny violation must NOT be dropped
         deny_violations = [v for v in violations if v.rule == "Warn on secrets"]
@@ -334,10 +334,10 @@ class TestHasDenyPrecedence:
             on_violation=ViolationSeverity.BLOCK,
         )
         engine = RulesEngine(rules=[deny_rule, allow_rule])
-        
+
         files = ["secrets/keys.py"]
         violations = engine.check(files)
-        
+
         # Only the deny violation should be present (deny takes precedence)
         assert len(violations) == 1
         assert violations[0].rule == "Block secrets"
@@ -351,9 +351,9 @@ class TestHasDenyPrecedence:
             on_violation=ViolationSeverity.BLOCK,
         )
         engine = RulesEngine(rules=[allow_rule])
-        
+
         files = ["secrets/keys.py", "README.md"]
         violations = engine.check(files)
-        
+
         # Both files violate the allow rule
         assert len(violations) == 2

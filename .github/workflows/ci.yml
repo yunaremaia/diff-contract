@@ -8,6 +8,16 @@ on:
   workflow_dispatch:
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - run: pip install ruff
+      - run: ruff check src/ tests/
+
   test:
     runs-on: ubuntu-latest
     strategy:
@@ -48,7 +58,7 @@ jobs:
 
   deploy-docs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [test, docs]
+    needs: [lint, test, docs]
     runs-on: ubuntu-latest
     # The concurrency group belongs on the JOB, not the workflow: a
     # workflow-level group would let an older commit reaching deploy cancel a
