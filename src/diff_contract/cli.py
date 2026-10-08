@@ -195,7 +195,7 @@ def _cmd_validate(args: argparse.Namespace) -> int:
     # Get changed files
     if args.from_stdin:
         changed_files = [line.strip() for line in sys.stdin if line.strip()]
-    elif args.files:
+    elif args.files is not None:
         changed_files = list(args.files)
     else:
         print("ERROR: Provide --files or --from-stdin", file=sys.stderr)
