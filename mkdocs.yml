@@ -1,4 +1,9 @@
 site_name: diff-contract
+# site_description is what makes the <meta name="description"> tag appear in the
+# built HTML. Without it the build is still green but the tag is absent, so search
+# engines have no snippet to show. The value mirrors the description field in
+# pyproject.toml.
+site_description: Deterministic guardrails for AI-generated diffs — define what files can change, block violations.
 # site_url is what makes the deployed sitemap.xml and canonical URLs correct.
 # Without it mkdocs emits an EMPTY <urlset/> and the whole site disappears from
 # sitemap-based discovery -- a green build that ships nothing.
@@ -9,6 +14,7 @@ edit_uri: edit/main/docs/
 
 theme:
   name: material
+  custom_dir: overrides
   palette:
     - scheme: default
       primary: indigo
