@@ -97,3 +97,9 @@ class TestViolationsToSarif:
         doc = violations_to_sarif([], tool_name="custom-tool", tool_version="1.2.3")
         assert doc["runs"][0]["tool"]["driver"]["name"] == "custom-tool"
         assert doc["runs"][0]["tool"]["driver"]["version"] == "1.2.3"
+
+    def test_default_version_matches_package(self) -> None:
+        from diff_contract import __version__
+
+        doc = violations_to_sarif([])
+        assert doc["runs"][0]["tool"]["driver"]["version"] == __version__

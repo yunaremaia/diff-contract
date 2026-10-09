@@ -5,13 +5,14 @@ from __future__ import annotations
 import json
 from typing import Any
 
+from diff_contract import __version__
 from diff_contract.engine import Violation
 
 
 def violations_to_sarif(
     violations: list[Violation],
     tool_name: str = "diff-contract",
-    tool_version: str = "0.1.0",
+    tool_version: str = __version__,
 ) -> dict[str, Any]:
     """Convert violations to SARIF 2.1.0 format.
 
