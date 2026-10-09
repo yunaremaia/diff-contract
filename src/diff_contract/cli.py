@@ -149,6 +149,7 @@ def _cmd_check(args: argparse.Namespace) -> int:
             "clean": len(violations) == 0,
             "block_count": sum(1 for v in violations if v.severity == ViolationSeverity.BLOCK),
             "warn_count": sum(1 for v in violations if v.severity == ViolationSeverity.WARN),
+            "info_count": sum(1 for v in violations if v.severity == ViolationSeverity.INFO),
             "violations": [
                 {
                     "file": v.file,
@@ -166,16 +167,24 @@ def _cmd_check(args: argparse.Namespace) -> int:
         else:
             print(f"✗ {len(violations)} violation(s):")
             for v in violations:
-                icon = "🔴" if v.severity == ViolationSeverity.BLOCK else "🟡"
+                if v.severity == ViolationSeverity.BLOCK:
+                    icon = "🔴"
+                elif v.severity == ViolationSeverity.INFO:
+                    icon = "🔵"
+                else:
+                    icon = "🟡"
                 print(f"  {icon} [{v.severity.value.upper()}] {v.message}")
 
     # Exit code
     has_block = any(v.severity == ViolationSeverity.BLOCK for v in violations)
     has_warn = any(v.severity == ViolationSeverity.WARN for v in violations)
+    has_info = any(v.severity == ViolationSeverity.INFO for v in violations)
     if has_block:
         return 1
     elif has_warn:
         return 2
+    elif has_info:
+        return 3
     return 0
 
 
@@ -214,6 +223,7 @@ def _cmd_validate(args: argparse.Namespace) -> int:
             "clean": len(violations) == 0,
             "block_count": sum(1 for v in violations if v.severity == ViolationSeverity.BLOCK),
             "warn_count": sum(1 for v in violations if v.severity == ViolationSeverity.WARN),
+            "info_count": sum(1 for v in violations if v.severity == ViolationSeverity.INFO),
             "violations": [
                 {
                     "file": v.file,
@@ -231,16 +241,24 @@ def _cmd_validate(args: argparse.Namespace) -> int:
         else:
             print(f"✗ {len(violations)} violation(s):")
             for v in violations:
-                icon = "🔴" if v.severity == ViolationSeverity.BLOCK else "🟡"
+                if v.severity == ViolationSeverity.BLOCK:
+                    icon = "🔴"
+                elif v.severity == ViolationSeverity.INFO:
+                    icon = "🔵"
+                else:
+                    icon = "🟡"
                 print(f"  {icon} [{v.severity.value.upper()}] {v.message}")
 
     # Exit codes: 0 clean, 1 block, 2 warn
     has_block = any(v.severity == ViolationSeverity.BLOCK for v in violations)
     has_warn = any(v.severity == ViolationSeverity.WARN for v in violations)
+    has_info = any(v.severity == ViolationSeverity.INFO for v in violations)
     if has_block:
         return 1
     elif has_warn:
         return 2
+    elif has_info:
+        return 3
     return 0
 
 

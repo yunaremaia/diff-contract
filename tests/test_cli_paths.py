@@ -406,7 +406,7 @@ class TestCheckJsonOutput:
 
         payload = json.loads(rec.stdout)
         assert rc == 0
-        assert payload == {"clean": True, "block_count": 0, "warn_count": 0, "violations": []}
+        assert payload == {"clean": True, "block_count": 0, "warn_count": 0, "info_count": 0, "violations": []}
 
     def test_block_json_reports_the_count_and_the_offending_file(self, tmp_path):
         contract = write_contract(tmp_path / "c.yml", BLOCK_CONTRACT)
@@ -822,3 +822,93 @@ class TestVersionFlag:
         )
         assert module.stdout.strip() == f"diff-contract {__version__}"
         assert "0.1.1" not in module.stdout or __version__ == "0.1.1"
+
+
+class TestInfoSeverity:
+    """Tests for on_violation: info handling in check and validate commands."""
+
+    def test_check_info_violation_exits_3(self, tmp_path, capsys):
+        """A contract with on_violation: info must exit with code 3."""
+        contract = tmp_path / "info.yml"
+        contract.write_text(
+            "version: 1\n"
+            "rules:\n"
+            "  - name: 'Info rule'\n"
+            "    deny:\n"
+            "      - '*.py'\n"
+            "    on_violation: info\n"
+        )
+        (tmp_path / "test.py").write_text("print('hello')\n")
+
+        rc = main(["check", "--contract", str(contract), "--files", "test.py"])
+
+        assert rc == 3
+        out = capsys.readouterr().out
+        assert "🔵" in out
+        assert "[INFO]" in out
+
+    def test_check_info_count_in_json_output(self, tmp_path, capsys):
+        """JSON output must include info_count when info violations exist."""
+        contract = tmp_path / "info.yml"
+        contract.write_text(
+            "version: 1\n"
+            "rules:\n"
+            "  - name: 'Info rule'\n"
+            "    deny:\n"
+            "      - '*.py'\n"
+            "    on_violation: info\n"
+        )
+        (tmp_path / "test.py").write_text("print('hello')\n")
+
+        rc = main([
+            "check", "--contract", str(contract),
+            "--files", "test.py", "--output", "json",
+        ])
+
+        assert rc == 3
+        data = json.loads(capsys.readouterr().out)
+        assert data["clean"] is False
+        assert data["block_count"] == 0
+        assert data["warn_count"] == 0
+        assert data["info_count"] == 1
+
+    def test_check_no_info_violations_has_zero_info_count(self, tmp_path, capsys):
+        """JSON output must include info_count=0 when no info violations exist."""
+        contract = tmp_path / "clean.yml"
+        contract.write_text(
+            "version: 1\n"
+            "rules:\n"
+            "  - name: 'Allow all'\n"
+            "    allow:\n"
+            "      - '*.py'\n"
+        )
+        (tmp_path / "test.py").write_text("print('hello')\n")
+
+        rc = main([
+            "check", "--contract", str(contract),
+            "--files", "test.py", "--output", "json",
+        ])
+
+        assert rc == 0
+        data = json.loads(capsys.readouterr().out)
+        assert data["clean"] is True
+        assert data["info_count"] == 0
+
+    def test_validate_info_violation_exits_3(self, tmp_path, capsys):
+        """validate command with on_violation: info must exit with code 3."""
+        contract = tmp_path / "info.yml"
+        contract.write_text(
+            "version: 1\n"
+            "rules:\n"
+            "  - name: 'Info rule'\n"
+            "    deny:\n"
+            "      - '*.py'\n"
+            "    on_violation: info\n"
+        )
+        (tmp_path / "test.py").write_text("print('hello')\n")
+
+        rc = main(["validate", "--contract", str(contract), "--files", "test.py"])
+
+        assert rc == 3
+        out = capsys.readouterr().out
+        assert "🔵" in out
